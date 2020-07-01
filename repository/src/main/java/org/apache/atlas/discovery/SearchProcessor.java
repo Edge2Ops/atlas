@@ -462,14 +462,16 @@ public abstract class SearchProcessor {
     }
 
     protected void constructESSortQuery(Set<SearchParameters.SortOrder> sortOrders, SearchSourceBuilder sourceBuilder) {
-        for (SearchParameters.SortOrder sortOrder: sortOrders) {
-            SortOrder esSortOrder;
-            if (sortOrder.getOrder() == SearchParameters.SortOrder.Order.DESC){
-                esSortOrder = SortOrder.DESC;
-            } else {
-                esSortOrder = SortOrder.ASC;
+        if (sortOrders != null) {
+            for (SearchParameters.SortOrder sortOrder: sortOrders) {
+                SortOrder esSortOrder;
+                if (sortOrder.getOrder() == SearchParameters.SortOrder.Order.DESC){
+                    esSortOrder = SortOrder.DESC;
+                } else {
+                    esSortOrder = SortOrder.ASC;
+                }
+                sourceBuilder.sort(new FieldSortBuilder(sortOrder.getField()).order(esSortOrder));
             }
-            sourceBuilder.sort(new FieldSortBuilder(sortOrder.getField()).order(esSortOrder));
         }
     }
 
@@ -687,14 +689,16 @@ public abstract class SearchProcessor {
     }
 
     protected void constructGraphSortQuery(Set<SearchParameters.SortOrder> sortOrders, AtlasGraphQuery graphQuery) {
-        for (SearchParameters.SortOrder sortOrder: sortOrders) {
-            AtlasGraphQuery.SortOrder graphSortOrder;
-            if (SearchParameters.SortOrder.Order.ASC == sortOrder.getOrder()) {
-                graphSortOrder = AtlasGraphQuery.SortOrder.ASC;
-            } else {
-                graphSortOrder = AtlasGraphQuery.SortOrder.DESC;
+        if (sortOrders != null) {
+            for (SearchParameters.SortOrder sortOrder: sortOrders) {
+                AtlasGraphQuery.SortOrder graphSortOrder;
+                if (SearchParameters.SortOrder.Order.ASC == sortOrder.getOrder()) {
+                    graphSortOrder = AtlasGraphQuery.SortOrder.ASC;
+                } else {
+                    graphSortOrder = AtlasGraphQuery.SortOrder.DESC;
+                }
+                graphQuery.orderBy(sortOrder.getField(), graphSortOrder);
             }
-            graphQuery.orderBy(sortOrder.getField(), graphSortOrder);
         }
     }
 
