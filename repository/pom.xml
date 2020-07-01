@@ -223,7 +223,12 @@
             <artifactId>hppc</artifactId>
             <version>${hppc.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.atlas</groupId>
+            <artifactId>search</artifactId>
+            <version>2.0.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <profiles>

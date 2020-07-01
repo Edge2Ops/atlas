@@ -30,6 +30,7 @@ import org.apache.atlas.repository.graphdb.AtlasEdge;
 import org.apache.atlas.repository.graphdb.AtlasGraph;
 import org.apache.atlas.repository.graphdb.AtlasGraphQuery;
 import org.apache.atlas.repository.graphdb.AtlasVertex;
+import org.apache.atlas.repository.search.AtlasElasticsearch;
 import org.apache.atlas.repository.store.graph.v2.AtlasGraphUtilsV2;
 import org.apache.atlas.repository.store.graph.v2.EntityGraphRetriever;
 import org.apache.atlas.type.AtlasClassificationType;
@@ -39,6 +40,9 @@ import org.apache.atlas.type.AtlasStructType.AtlasAttribute;
 import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,29 +60,31 @@ import static org.apache.atlas.model.discovery.SearchParameters.WILDCARD_CLASSIF
  * possible chaining of processor(s)
  */
 public class SearchContext {
-    private final SearchParameters        searchParameters;
-    private final AtlasTypeRegistry       typeRegistry;
-    private final AtlasGraph              graph;
-    private final Set<String>             indexedKeys;
-    private final Set<String>             entityAttributes;
-    private final AtlasEntityType         entityType;
+    private final SearchParameters searchParameters;
+    private final AtlasTypeRegistry typeRegistry;
+    private final AtlasGraph graph;
+    private final AtlasElasticsearch search;
+    private final Set<String> indexedKeys;
+    private final Set<String> entityAttributes;
+    private final AtlasEntityType entityType;
     private final AtlasClassificationType classificationType;
-    private       SearchProcessor         searchProcessor;
-    private       boolean                 terminateSearch = false;
+    private SearchProcessor searchProcessor;
+    private boolean terminateSearch = false;
 
     public final static AtlasClassificationType MATCH_ALL_WILDCARD_CLASSIFICATION = new AtlasClassificationType(new AtlasClassificationDef(WILDCARD_CLASSIFICATIONS));
-    public final static AtlasClassificationType MATCH_ALL_CLASSIFIED              = new AtlasClassificationType(new AtlasClassificationDef(ALL_CLASSIFICATIONS));
-    public final static AtlasClassificationType MATCH_ALL_NOT_CLASSIFIED          = new AtlasClassificationType(new AtlasClassificationDef(NO_CLASSIFICATIONS));
+    public final static AtlasClassificationType MATCH_ALL_CLASSIFIED = new AtlasClassificationType(new AtlasClassificationDef(ALL_CLASSIFICATIONS));
+    public final static AtlasClassificationType MATCH_ALL_NOT_CLASSIFIED = new AtlasClassificationType(new AtlasClassificationDef(NO_CLASSIFICATIONS));
 
     public SearchContext(SearchParameters searchParameters, AtlasTypeRegistry typeRegistry, AtlasGraph graph, Set<String> indexedKeys) throws AtlasBaseException {
         String classificationName = searchParameters.getClassification();
 
-        this.searchParameters   = searchParameters;
-        this.typeRegistry       = typeRegistry;
-        this.graph              = graph;
-        this.indexedKeys        = indexedKeys;
-        this.entityAttributes   = new HashSet<>();
-        this.entityType         = typeRegistry.getEntityTypeByName(searchParameters.getTypeName());
+        this.searchParameters = searchParameters;
+        this.typeRegistry = typeRegistry;
+        this.search = new AtlasElasticsearch();
+        this.graph = graph;
+        this.indexedKeys = indexedKeys;
+        this.entityAttributes = new HashSet<>();
+        this.entityType = typeRegistry.getEntityTypeByName(searchParameters.getTypeName());
         this.classificationType = getClassificationType(classificationName);
 
         // Validate if the type name exists
@@ -121,25 +127,45 @@ public class SearchContext {
         }
     }
 
-    public SearchParameters getSearchParameters() { return searchParameters; }
+    public SearchParameters getSearchParameters() {
+        return searchParameters;
+    }
 
-    public AtlasTypeRegistry getTypeRegistry() { return typeRegistry; }
+    public AtlasTypeRegistry getTypeRegistry() {
+        return typeRegistry;
+    }
 
-    public AtlasGraph getGraph() { return graph; }
+    public AtlasGraph getGraph() {
+        return graph;
+    }
 
-    public Set<String> getIndexedKeys() { return indexedKeys; }
+    public Set<String> getIndexedKeys() {
+        return indexedKeys;
+    }
 
-    public Set<String> getEntityAttributes() { return entityAttributes; }
+    public Set<String> getEntityAttributes() {
+        return entityAttributes;
+    }
 
-    public AtlasEntityType getEntityType() { return entityType; }
+    public AtlasEntityType getEntityType() {
+        return entityType;
+    }
 
-    public AtlasClassificationType getClassificationType() { return classificationType; }
+    public AtlasClassificationType getClassificationType() {
+        return classificationType;
+    }
 
-    public SearchProcessor getSearchProcessor() { return searchProcessor; }
+    public SearchProcessor getSearchProcessor() {
+        return searchProcessor;
+    }
 
-    public boolean terminateSearch() { return terminateSearch; }
+    public boolean terminateSearch() {
+        return terminateSearch;
+    }
 
-    public void terminateSearch(boolean terminateSearch) { this.terminateSearch = terminateSearch; }
+    public void terminateSearch(boolean terminateSearch) {
+        this.terminateSearch = terminateSearch;
+    }
 
     public StringBuilder toString(StringBuilder sb) {
         if (sb == null) {
@@ -192,7 +218,7 @@ public class SearchContext {
 
     private boolean hasAttributeFilter(FilterCriteria filterCriteria) {
         return filterCriteria != null &&
-               (CollectionUtils.isNotEmpty(filterCriteria.getCriterion()) || StringUtils.isNotEmpty(filterCriteria.getAttributeName()));
+                (CollectionUtils.isNotEmpty(filterCriteria.getCriterion()) || StringUtils.isNotEmpty(filterCriteria.getAttributeName()));
     }
 
     private void addProcessor(SearchProcessor processor) {
@@ -224,10 +250,10 @@ public class SearchContext {
 
         if (StringUtils.isNotEmpty(termName)) {
             AtlasEntityType termType = getTermEntityType();
-            AtlasAttribute  attrName = termType.getAttribute(TermSearchProcessor.ATLAS_GLOSSARY_TERM_ATTR_QNAME);
-            AtlasGraphQuery query    = graph.query().has(Constants.ENTITY_TYPE_PROPERTY_KEY, termType.getTypeName())
-                                                    .has(attrName.getVertexPropertyName(), termName)
-                                                    .has(Constants.STATE_PROPERTY_KEY, AtlasEntity.Status.ACTIVE.name());
+            AtlasAttribute attrName = termType.getAttribute(TermSearchProcessor.ATLAS_GLOSSARY_TERM_ATTR_QNAME);
+            AtlasGraphQuery query = graph.query().has(Constants.ENTITY_TYPE_PROPERTY_KEY, termType.getTypeName())
+                    .has(attrName.getVertexPropertyName(), termName)
+                    .has(Constants.STATE_PROPERTY_KEY, AtlasEntity.Status.ACTIVE.name());
 
             Iterator<AtlasVertex> results = query.vertices().iterator();
 
@@ -238,10 +264,10 @@ public class SearchContext {
     }
 
     private List<AtlasVertex> getAssignedEntities(AtlasVertex glossaryTerm) {
-        List<AtlasVertex>   ret      = new ArrayList<>();
-        AtlasEntityType     termType = getTermEntityType();
-        AtlasAttribute      attr     = termType.getRelationshipAttribute(TermSearchProcessor.ATLAS_GLOSSARY_TERM_ATTR_ASSIGNED_ENTITIES, EntityGraphRetriever.TERM_RELATION_NAME);
-        Iterator<AtlasEdge> edges    = GraphHelper.getEdgesForLabel(glossaryTerm, attr.getRelationshipEdgeLabel(), attr.getRelationshipEdgeDirection());
+        List<AtlasVertex> ret = new ArrayList<>();
+        AtlasEntityType termType = getTermEntityType();
+        AtlasAttribute attr = termType.getRelationshipAttribute(TermSearchProcessor.ATLAS_GLOSSARY_TERM_ATTR_ASSIGNED_ENTITIES, EntityGraphRetriever.TERM_RELATION_NAME);
+        Iterator<AtlasEdge> edges = GraphHelper.getEdgesForLabel(glossaryTerm, attr.getRelationshipEdgeLabel(), attr.getRelationshipEdgeDirection());
 
         boolean excludeDeletedEntities = searchParameters.getExcludeDeletedEntities();
         if (edges != null) {
@@ -261,5 +287,9 @@ public class SearchContext {
 
     private AtlasEntityType getTermEntityType() {
         return typeRegistry.getEntityTypeByName(TermSearchProcessor.ATLAS_GLOSSARY_TERM_ENTITY_TYPE);
+    }
+
+    public AtlasElasticsearch getSearchClient() {
+        return search;
     }
 }

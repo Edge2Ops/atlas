@@ -142,8 +142,11 @@ public class HBaseBridge {
                 urls = new String[] { DEFAULT_ATLAS_URL };
             }
 
+            if (AuthenticationUtil.isKeycloakAuthenticationEnabled()) {
+                String token = AuthenticationUtil.getBearerTokenInput();
 
-            if (!AuthenticationUtil.isKerberosAuthenticationEnabled()) {
+                atlasClientV2 = new AtlasClientV2(urls, token);
+            } else if (!AuthenticationUtil.isKerberosAuthenticationEnabled()) {
                 String[] basicAuthUsernamePassword = AuthenticationUtil.getBasicAuthenticationInput();
 
                 atlasClientV2 = new AtlasClientV2(urls, basicAuthUsernamePassword);

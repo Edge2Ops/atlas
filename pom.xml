@@ -669,7 +669,7 @@
         <sqoop.version>1.4.6.2.3.99.0-195</sqoop.version>
         <storm.version>1.2.0</storm.version>
         <curator.version>4.0.1</curator.version>
-        <elasticsearch.version>5.6.4</elasticsearch.version>
+        <elasticsearch.version>6.0.1</elasticsearch.version>
 
         <json.version>3.2.11</json.version>
         <log4j.version>1.2.17</log4j.version>
@@ -718,6 +718,10 @@
         <woodstox-core.version>5.0.3</woodstox-core.version>
         <hppc.version>0.8.1</hppc.version>
         <!-- Storm dependencies -->
+
+        <!-- keycloak dependencies -->
+        <keycloak.version>6.0.1</keycloak.version>
+        <!-- keycloak dependencies -->
 
         <PermGen>64m</PermGen>
         <MaxPermGen>512m</MaxPermGen>
@@ -785,12 +789,13 @@
         <module>addons/kafka-bridge</module>
 
         <module>distro</module>
+        <module>search</module>
     </modules>
 
     <repositories>
         <repository>
             <id>central</id>
-            <url>http://repo1.maven.org/maven2</url>
+            <url>https://repo1.maven.org/maven2</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>

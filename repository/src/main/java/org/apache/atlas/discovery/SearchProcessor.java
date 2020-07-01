@@ -41,6 +41,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,48 +79,62 @@ public abstract class SearchProcessor {
     public static final String  BRACE_CLOSE_STR            = ")";
 
     private static final Map<SearchParameters.Operator, String>                            OPERATOR_MAP           = new HashMap<>();
+    private static final Map<SearchParameters.Operator, String>                            ES_OPERATOR_MAP           = new HashMap<>();
     private static final Map<SearchParameters.Operator, VertexAttributePredicateGenerator> OPERATOR_PREDICATE_MAP = new HashMap<>();
 
     static
     {
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.LT, "%s: [* TO %s}");
         OPERATOR_MAP.put(SearchParameters.Operator.LT, INDEX_SEARCH_PREFIX + "\"%s\": [* TO %s}");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.LT, getLTPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.GT, "%s: {%s TO *]");
         OPERATOR_MAP.put(SearchParameters.Operator.GT, INDEX_SEARCH_PREFIX + "\"%s\": {%s TO *]");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.GT, getGTPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.LTE, "%s: [* TO %s]");
         OPERATOR_MAP.put(SearchParameters.Operator.LTE, INDEX_SEARCH_PREFIX + "\"%s\": [* TO %s]");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.LTE, getLTEPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.GTE, "%s: [%s TO *]");
         OPERATOR_MAP.put(SearchParameters.Operator.GTE, INDEX_SEARCH_PREFIX + "\"%s\": [%s TO *]");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.GTE, getGTEPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.EQ, "%s: %s");
         OPERATOR_MAP.put(SearchParameters.Operator.EQ, INDEX_SEARCH_PREFIX + "\"%s\": %s");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.EQ, getEQPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.NEQ, "(*:* -" + "%s: %s)");
         OPERATOR_MAP.put(SearchParameters.Operator.NEQ, "(*:* -" + INDEX_SEARCH_PREFIX + "\"%s\": %s)");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.NEQ, getNEQPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.IN, "%s: (%s)");
         OPERATOR_MAP.put(SearchParameters.Operator.IN, INDEX_SEARCH_PREFIX + "\"%s\": (%s)"); // this should be a list of quoted strings
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.IN, getINPredicateGenerator()); // this should be a list of quoted strings
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.LIKE, "%s: (%s)");
         OPERATOR_MAP.put(SearchParameters.Operator.LIKE, INDEX_SEARCH_PREFIX + "\"%s\": (%s)"); // this should be regex pattern
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.LIKE, getLIKEPredicateGenerator()); // this should be regex pattern
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.STARTS_WITH, "%s: (%s*)");
         OPERATOR_MAP.put(SearchParameters.Operator.STARTS_WITH, INDEX_SEARCH_PREFIX + "\"%s\": (%s*)");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.STARTS_WITH, getStartsWithPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.ENDS_WITH, "%s: (*%s)");
         OPERATOR_MAP.put(SearchParameters.Operator.ENDS_WITH, INDEX_SEARCH_PREFIX + "\"%s\": (*%s)");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.ENDS_WITH, getEndsWithPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.CONTAINS, "%s: (*%s*)");
         OPERATOR_MAP.put(SearchParameters.Operator.CONTAINS, INDEX_SEARCH_PREFIX + "\"%s\": (*%s*)");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.CONTAINS, getContainsPredicateGenerator());
 
         // TODO: Add contains any, contains all mappings here
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.IS_NULL, "(*:* NOT " + "%s:[* TO *])");
         OPERATOR_MAP.put(SearchParameters.Operator.IS_NULL, "(*:* NOT " + INDEX_SEARCH_PREFIX + "\"%s\":[* TO *])");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.IS_NULL, getIsNullPredicateGenerator());
 
+        ES_OPERATOR_MAP.put(SearchParameters.Operator.NOT_NULL, "%s:[* TO *]");
         OPERATOR_MAP.put(SearchParameters.Operator.NOT_NULL, INDEX_SEARCH_PREFIX + "\"%s\":[* TO *]");
         OPERATOR_PREDICATE_MAP.put(SearchParameters.Operator.NOT_NULL, getNotNullPredicateGenerator());
     }
@@ -250,6 +267,16 @@ public abstract class SearchProcessor {
         return ret;
     }
 
+    protected void constructTypeTestESQuery(StringBuilder indexQuery, String typeAndAllSubTypesQryStr) {
+        if (StringUtils.isNotEmpty(typeAndAllSubTypesQryStr)) {
+            if (indexQuery.length() > 0) {
+                indexQuery.append(AND_STR);
+            }
+
+            indexQuery.append(Constants.TYPE_NAME_PROPERTY_KEY).append(":").append(typeAndAllSubTypesQryStr);
+        }
+    }
+
     protected void constructTypeTestQuery(StringBuilder indexQuery, String typeAndAllSubTypesQryStr) {
         if (StringUtils.isNotEmpty(typeAndAllSubTypesQryStr)) {
             if (indexQuery.length() > 0) {
@@ -333,6 +360,14 @@ public abstract class SearchProcessor {
         }
     }
 
+    protected void constructStateTestESQuery(StringBuilder indexQuery) {
+        if (indexQuery.length() > 0) {
+            indexQuery.append(AND_STR);
+        }
+
+        indexQuery.append(Constants.STATE_PROPERTY_KEY).append(":ACTIVE");
+    }
+
     protected void constructStateTestQuery(StringBuilder indexQuery) {
         if (indexQuery.length() > 0) {
             indexQuery.append(AND_STR);
@@ -408,7 +443,7 @@ public abstract class SearchProcessor {
                 return EMPTY_STRING;
             }
         } else if (indexAttributes.contains(criteria.getAttributeName())){
-            return toIndexExpression(type, criteria.getAttributeName(), criteria.getOperator(), criteria.getAttributeValue());
+            return toESIndexExpression(type, criteria.getAttributeName(), criteria.getOperator(), criteria.getAttributeValue());
         } else {
             return EMPTY_STRING;
         }
@@ -438,6 +473,23 @@ public abstract class SearchProcessor {
         }
 
         return null;
+    }
+
+    private String toESIndexExpression(AtlasStructType type, String attrName, SearchParameters.Operator op, String attrVal) {
+        String ret = EMPTY_STRING;
+
+        try {
+            if (ES_OPERATOR_MAP.get(op) != null) {
+                String qualifiedName         = type.getQualifiedAttributeName(attrName);
+                String escapeIndexQueryValue = AtlasAttribute.escapeIndexQueryValue(attrVal);
+
+                ret = String.format(ES_OPERATOR_MAP.get(op), qualifiedName, escapeIndexQueryValue);
+            }
+        } catch (AtlasBaseException ex) {
+            LOG.warn(ex.getMessage());
+        }
+
+        return ret;
     }
 
     private String toIndexExpression(AtlasStructType type, String attrName, SearchParameters.Operator op, String attrVal) {
@@ -727,7 +779,7 @@ public abstract class SearchProcessor {
     private static boolean isIndexQuerySpecialChar(char c) {
         switch (c) {
             case '+':
-            case '-':
+//            case '-':
             case '&':
             case '|':
             case '!':
@@ -743,7 +795,7 @@ public abstract class SearchProcessor {
             case '*':
             case '?':
             case ':':
-            case '/':
+//            case '/':
             case '#':
             case '$':
             case '%':
@@ -753,6 +805,21 @@ public abstract class SearchProcessor {
         }
 
         return false;
+    }
+
+
+    protected List<AtlasVertex> getVerticesFromESIndexQueryResult(SearchResponse searchResponse, List<AtlasVertex> vertices) {
+        if (searchResponse != null) {
+            SearchHits hits = searchResponse.getHits();
+            SearchHit[] searchHits = hits.getHits();
+            for (SearchHit hit : searchHits) {
+                Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+                String guid = (String) sourceAsMap.get(Constants.GUID_PROPERTY_KEY);
+                AtlasVertex vertex = AtlasGraphUtilsV2.findByGuid(guid);
+                vertices.add(vertex);
+            }
+        }
+        return vertices;
     }
 
     protected List<AtlasVertex> getVerticesFromIndexQueryResult(Iterator<AtlasIndexQuery.Result> idxQueryResult, List<AtlasVertex> vertices) {

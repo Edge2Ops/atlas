@@ -40,24 +40,26 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 public class SearchParameters implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String  query;
-    private String  typeName;
-    private String  classification;
-    private String  termName;
+    private String query;
+    private String typeName;
+    private String classification;
+    private String termName;
     private boolean excludeDeletedEntities;
     private boolean includeClassificationAttributes;
-    private boolean includeSubTypes                 = true;
-    private boolean includeSubClassifications       = true;
-    private int     limit;
-    private int     offset;
+    private boolean includeSubTypes = true;
+    private boolean includeSubClassifications = true;
+
+    private int limit;
+    private int offset;
 
     private FilterCriteria entityFilters;
     private FilterCriteria tagFilters;
-    private Set<String>    attributes;
+    private Set<String> attributes;
+    private List<SortOrder> sortOrders;
 
     public static final String WILDCARD_CLASSIFICATIONS = "*";
-    public static final String ALL_CLASSIFICATIONS      = "_CLASSIFIED";
-    public static final String NO_CLASSIFICATIONS       = "_NOT_CLASSIFIED";
+    public static final String ALL_CLASSIFICATIONS = "_CLASSIFIED";
+    public static final String NO_CLASSIFICATIONS = "_NOT_CLASSIFIED";
 
     /**
      * @return The type of query
@@ -68,6 +70,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Set query type
+     *
      * @param query type
      */
     public void setQuery(String query) {
@@ -83,6 +86,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Set the type name to search on
+     *
      * @param typeName type name
      */
     public void setTypeName(String typeName) {
@@ -90,7 +94,6 @@ public class SearchParameters implements Serializable {
     }
 
     /**
-     *
      * @return termName to search on
      */
     public String getTermName() {
@@ -99,6 +102,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Set the classification/tag to search on
+     *
      * @param termName classification/tag name
      */
     public void setTermName(String termName) {
@@ -106,7 +110,6 @@ public class SearchParameters implements Serializable {
     }
 
     /**
-     *
      * @return Classification/tag to search on
      */
     public String getClassification() {
@@ -115,6 +118,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Set the classification/tag to search on
+     *
      * @param classification classification/tag name
      */
     public void setClassification(String classification) {
@@ -130,6 +134,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Exclude deleted entities from search
+     *
      * @param excludeDeletedEntities boolean flag
      */
     public void setExcludeDeletedEntities(boolean excludeDeletedEntities) {
@@ -145,6 +150,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Include classificatio attributes in search result.
+     *
      * @param includeClassificationAttributes boolean flag
      */
     public void setIncludeClassificationAttributes(boolean includeClassificationAttributes) {
@@ -160,6 +166,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Include sub-type entities in search
+     *
      * @param includeSubTypes boolean flag
      */
     public void setIncludeSubTypes(boolean includeSubTypes) {
@@ -175,6 +182,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Include sub-classifications in search
+     *
      * @param includeSubClassifications boolean flag
      */
     public void setIncludeSubClassifications(boolean includeSubClassifications) {
@@ -190,6 +198,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Restrict the results to the specified limit
+     *
      * @param limit max number of results
      */
     public void setLimit(int limit) {
@@ -212,6 +221,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Entity attribute filters for the type (if type name is specified)
+     *
      * @return
      */
     public FilterCriteria getEntityFilters() {
@@ -220,6 +230,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Filter the entities on this criteria
+     *
      * @param entityFilters
      */
     public void setEntityFilters(FilterCriteria entityFilters) {
@@ -228,6 +239,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Tag attribute filters for the classification/tag (if tag name is specified)
+     *
      * @return
      */
     public FilterCriteria getTagFilters() {
@@ -236,6 +248,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Filter the tag/classification on this criteria
+     *
      * @param tagFilters
      */
     public void setTagFilters(FilterCriteria tagFilters) {
@@ -244,6 +257,7 @@ public class SearchParameters implements Serializable {
 
     /**
      * Attribute values included in the results
+     *
      * @return
      */
     public Set<String> getAttributes() {
@@ -252,10 +266,19 @@ public class SearchParameters implements Serializable {
 
     /**
      * Return these attributes in the result response
+     *
      * @param attributes
      */
     public void setAttributes(Set<String> attributes) {
         this.attributes = attributes;
+    }
+
+    public List<SortOrder> getSortOrders() {
+        return sortOrders;
+    }
+
+    public void setSortOrders(List<SortOrder> sortOrders) {
+        this.sortOrders = sortOrders;
     }
 
     @Override
@@ -279,7 +302,7 @@ public class SearchParameters implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(query, typeName, classification, termName, excludeDeletedEntities, includeClassificationAttributes,
-                            limit, offset, entityFilters, tagFilters, attributes);
+                limit, offset, entityFilters, tagFilters, attributes);
     }
 
     public StringBuilder toString(StringBuilder sb) {
@@ -309,21 +332,79 @@ public class SearchParameters implements Serializable {
         return toString(new StringBuilder()).toString();
     }
 
+    @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class SortOrder {
+        private enum Order {ASC, DESC}
+
+        private String field;
+        private Order order;
+
+        public String getField(){
+            return field;
+        }
+
+        public Order getOrder() {
+            return order;
+        }
+
+        public void setField(String field) {
+            this.field = field;
+        }
+
+        public void setOrder(Order order) {
+            this.order = order;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SortOrder that = (SortOrder) o;
+            return Objects.equals(field, that.field) &&
+                    order == that.order;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(order, field);
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            if (sb == null) {
+                sb = new StringBuilder();
+            }
+
+            sb.append('{');
+            sb.append("field='").append(field).append('\'');
+            sb.append(", order=").append(order);
+            sb.append('}');
+
+            return sb;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+    }
+
 
     @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class FilterCriteria {
         // Can be presented as a group of conditions or a single condition
-        public enum Condition { AND, OR }
+        public enum Condition {AND, OR}
 
         // Single condition
-        private String   attributeName;
+        private String attributeName;
         private Operator operator;
-        private String   attributeValue;
+        private String attributeValue;
 
         // Complex conditions
-        private Condition            condition;
+        private Condition condition;
         private List<FilterCriteria> criterion;
 
         public String getAttributeName() {
@@ -431,7 +512,7 @@ public class SearchParameters implements Serializable {
 
         private String[] symbols;
 
-        static  {
+        static {
             for (Operator operator : Operator.values()) {
                 for (String s : operator.symbols) {
                     operatorsMap.put(s, operator);
