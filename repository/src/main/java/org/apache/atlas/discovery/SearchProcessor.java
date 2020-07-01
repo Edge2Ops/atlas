@@ -42,8 +42,13 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -449,6 +454,25 @@ public abstract class SearchProcessor {
         }
     }
 
+    protected void constructESQueryUsingQueryString(String queryString, SearchSourceBuilder sourceBuilder) {
+        sourceBuilder.query(QueryBuilders.queryStringQuery(queryString));
+        String[] includeFields = new String[] {Constants.GUID_PROPERTY_KEY};
+        String[] excludeFields = new String[] {};
+        sourceBuilder.fetchSource(includeFields, excludeFields);
+    }
+
+    protected void constructESSortQuery(Set<SearchParameters.SortOrder> sortOrders, SearchSourceBuilder sourceBuilder) {
+        for (SearchParameters.SortOrder sortOrder: sortOrders) {
+            SortOrder esSortOrder;
+            if (sortOrder.getOrder() == SearchParameters.SortOrder.Order.DESC){
+                esSortOrder = SortOrder.DESC;
+            } else {
+                esSortOrder = SortOrder.ASC;
+            }
+            sourceBuilder.sort(new FieldSortBuilder(sortOrder.getField()).order(esSortOrder));
+        }
+    }
+
     private Predicate toInMemoryPredicate(AtlasStructType type, FilterCriteria criteria, Set<String> indexAttributes) {
         if (criteria.getCondition() != null && CollectionUtils.isNotEmpty(criteria.getCriterion())) {
             List<Predicate> predicates = new ArrayList<>();
@@ -660,6 +684,18 @@ public abstract class SearchProcessor {
         }
 
         return query;
+    }
+
+    protected void constructGraphSortQuery(Set<SearchParameters.SortOrder> sortOrders, AtlasGraphQuery graphQuery) {
+        for (SearchParameters.SortOrder sortOrder: sortOrders) {
+            AtlasGraphQuery.SortOrder graphSortOrder;
+            if (SearchParameters.SortOrder.Order.ASC == sortOrder.getOrder()) {
+                graphSortOrder = AtlasGraphQuery.SortOrder.ASC;
+            } else {
+                graphSortOrder = AtlasGraphQuery.SortOrder.DESC;
+            }
+            graphQuery.orderBy(sortOrder.getField(), graphSortOrder);
+        }
     }
 
     private String toGremlinComparisonQuery(AtlasAttribute attribute, SearchParameters.Operator operator, String attrValue, Map<String, Object> queryBindings) {

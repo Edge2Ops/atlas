@@ -134,6 +134,11 @@ public final class Constants {
     /**
      * search backing index name for vertex keys.
      */
+    public static final String INDEX_PREFIX = "janusgraph_";
+
+    /**
+     * search backing index name for vertex keys.
+     */
     public static final String VERTEX_INDEX = "vertex_index";
 
     /**

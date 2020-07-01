@@ -55,7 +55,7 @@ public class SearchParameters implements Serializable {
     private FilterCriteria entityFilters;
     private FilterCriteria tagFilters;
     private Set<String> attributes;
-    private List<SortOrder> sortOrders;
+    private Set<SortOrder> sortOrders;
 
     public static final String WILDCARD_CLASSIFICATIONS = "*";
     public static final String ALL_CLASSIFICATIONS = "_CLASSIFIED";
@@ -273,11 +273,11 @@ public class SearchParameters implements Serializable {
         this.attributes = attributes;
     }
 
-    public List<SortOrder> getSortOrders() {
+    public Set<SortOrder> getSortOrders() {
         return sortOrders;
     }
 
-    public void setSortOrders(List<SortOrder> sortOrders) {
+    public void setSortOrders(Set<SortOrder> sortOrders) {
         this.sortOrders = sortOrders;
     }
 
@@ -336,7 +336,7 @@ public class SearchParameters implements Serializable {
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class SortOrder {
-        private enum Order {ASC, DESC}
+        public enum Order {ASC, DESC}
 
         private String field;
         private Order order;

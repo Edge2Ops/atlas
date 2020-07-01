@@ -17,6 +17,7 @@
  */
 package org.apache.atlas.discovery;
 
+import org.apache.atlas.model.discovery.SearchParameters;
 import org.apache.atlas.model.discovery.SearchParameters.FilterCriteria;
 import org.apache.atlas.repository.Constants;
 import org.apache.atlas.repository.graphdb.AtlasGraphQuery;
@@ -63,18 +64,22 @@ public class EntitySearchProcessor extends SearchProcessor {
     private final AtlasGraphQuery graphQuery;
     private Predicate graphQueryPredicate;
     private Predicate filterGraphQueryPredicate;
-    private String queryString;
+    private SearchSourceBuilder searchSourceBuilder;
+    private String indexName;
 
     public EntitySearchProcessor(SearchContext context) {
         super(context);
 
         final AtlasEntityType entityType = context.getEntityType();
         final FilterCriteria filterCriteria = context.getSearchParameters().getEntityFilters();
+        final Set<SearchParameters.SortOrder> sortOrders = context.getSearchParameters().getSortOrders();
         final Set<String> indexAttributes = new HashSet<>();
         final Set<String> graphAttributes = new HashSet<>();
         final Set<String> allAttributes = new HashSet<>();
         final Set<String> typeAndSubTypes;
         final String typeAndSubTypesQryStr;
+        searchSourceBuilder = new SearchSourceBuilder();
+
 
         if (context.getSearchParameters().getIncludeSubTypes()) {
             typeAndSubTypes = entityType.getTypeAndAllSubTypes();
@@ -155,11 +160,13 @@ public class EntitySearchProcessor extends SearchProcessor {
             indexQueryString = STRAY_OR_PATTERN.matcher(indexQueryString).replaceAll(")");
             indexQueryString = STRAY_ELIPSIS_PATTERN.matcher(indexQueryString).replaceAll("");
 
+            constructESQueryUsingQueryString(indexQueryString, this.searchSourceBuilder);
+            constructESSortQuery(sortOrders, this.searchSourceBuilder);
+            this.indexName = Constants.INDEX_PREFIX + Constants.VERTEX_INDEX;
+
             this.indexQuery = context.getGraph().indexQuery(Constants.VERTEX_INDEX, indexQueryString);
-            this.queryString = indexQueryString;
         } else {
             this.indexQuery = null;
-            this.queryString = null;
         }
 
         if (CollectionUtils.isNotEmpty(graphAttributes) || !typeSearchByIndex) {
@@ -216,6 +223,8 @@ public class EntitySearchProcessor extends SearchProcessor {
                     graphQueryPredicate = activePredicate;
                 }
             }
+
+            constructGraphSortQuery(sortOrders, this.graphQuery);
         } else {
             graphQuery = null;
             graphQueryPredicate = null;
@@ -280,7 +289,7 @@ public class EntitySearchProcessor extends SearchProcessor {
 
                 if (indexQuery != null) {
                     AtlasElasticsearch searchClient = context.getSearchClient();
-                    SearchResponse searchResponse = searchClient.search(Constants.VERTEX_INDEX, queryString, limit, qryOffset);
+                    SearchResponse searchResponse = searchClient.search(this.indexName, searchSourceBuilder, limit, qryOffset);
                     getVerticesFromESIndexQueryResult(searchResponse, entityVertices);
 
                     // Iterator<AtlasIndexQuery.Result> idxQueryResult = indexQuery.vertices(qryOffset, limit);
