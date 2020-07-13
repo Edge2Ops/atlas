@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,16 +19,15 @@ package org.apache.atlas.web.rest;
 
 import org.apache.atlas.AtlasErrorCode;
 import org.apache.atlas.EntityAuditEvent;
+import org.apache.atlas.authorize.AtlasAuthorizationUtils;
+import org.apache.atlas.authorize.AtlasEntityAccessRequest;
+import org.apache.atlas.authorize.AtlasPrivilege;
 import org.apache.atlas.exception.AtlasBaseException;
 import org.apache.atlas.model.TypeCategory;
 import org.apache.atlas.model.audit.EntityAuditEventV2;
-import org.apache.atlas.model.instance.AtlasClassification;
+import org.apache.atlas.model.instance.*;
 import org.apache.atlas.model.instance.AtlasEntity.AtlasEntitiesWithExtInfo;
 import org.apache.atlas.model.instance.AtlasEntity.AtlasEntityWithExtInfo;
-import org.apache.atlas.model.instance.AtlasEntityHeader;
-import org.apache.atlas.model.instance.AtlasEntityHeaders;
-import org.apache.atlas.model.instance.ClassificationAssociateRequest;
-import org.apache.atlas.model.instance.EntityMutationResponse;
 import org.apache.atlas.model.typedef.AtlasStructDef.AtlasAttributeDef;
 import org.apache.atlas.repository.audit.EntityAuditRepository;
 import org.apache.atlas.repository.store.graph.v2.ClassificationAssociator;
@@ -78,24 +77,24 @@ import java.util.Map;
 @Consumes({Servlets.JSON_MEDIA_TYPE, MediaType.APPLICATION_JSON})
 @Produces({Servlets.JSON_MEDIA_TYPE, MediaType.APPLICATION_JSON})
 public class EntityREST {
-    private static final Logger LOG      = LoggerFactory.getLogger(EntityREST.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityREST.class);
     private static final Logger PERF_LOG = AtlasPerfTracer.getPerfLogger("rest.EntityREST");
 
-    public static final String PREFIX_ATTR  = "attr:";
+    public static final String PREFIX_ATTR = "attr:";
     public static final String PREFIX_ATTR_ = "attr_";
 
 
-    private final AtlasTypeRegistry      typeRegistry;
-    private final AtlasEntityStore       entitiesStore;
-    private final EntityAuditRepository  auditRepository;
+    private final AtlasTypeRegistry typeRegistry;
+    private final AtlasEntityStore entitiesStore;
+    private final EntityAuditRepository auditRepository;
     private final AtlasInstanceConverter instanceConverter;
 
     @Inject
     public EntityREST(AtlasTypeRegistry typeRegistry, AtlasEntityStore entitiesStore,
                       EntityAuditRepository auditRepository, AtlasInstanceConverter instanceConverter) {
-        this.typeRegistry      = typeRegistry;
-        this.entitiesStore     = entitiesStore;
-        this.auditRepository   = auditRepository;
+        this.typeRegistry = typeRegistry;
+        this.entitiesStore = entitiesStore;
+        this.auditRepository = auditRepository;
         this.instanceConverter = instanceConverter;
     }
 
@@ -121,6 +120,37 @@ public class EntityREST {
         } finally {
             AtlasPerfTracer.log(perf);
         }
+    }
+
+    /**
+     * Bulk API to create new entities or updates existing entities in Atlas.
+     * Existing entity is matched using its unique guid if supplied or by its unique attributes eg: qualifiedName
+     */
+    @POST
+    @Path("/evaluator")
+    public List<AtlasEvaluatePolicyResponse> evaluatePolicies(List<AtlasEvaluatePolicyRequest> entities) throws AtlasBaseException {
+        AtlasPerfTracer perf = null;
+
+        List<AtlasEvaluatePolicyResponse> response = new ArrayList();
+
+        try {
+            if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.evaluatePolicies()");
+            }
+
+            for (int i = 0; i < entities.size(); i++) {
+                try {
+                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), null)), entities.get(i).getAction() + "guid=", entities.get(i).getEntityGuid());
+                    response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), true));
+                } catch (AtlasBaseException e) {
+                    response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), false));
+                }
+            }
+        } finally {
+            AtlasPerfTracer.log(perf);
+        }
+
+        return response;
     }
 
     /**
@@ -206,7 +236,6 @@ public class EntityREST {
      *
      * PUT /v2/entity/uniqueAttribute/type/aType?attr:aTypeAttribute=someValue
      *
-
      *******/
     @PUT
     @Path("/uniqueAttribute/type/{typeName}")
@@ -418,9 +447,9 @@ public class EntityREST {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.addClassificationsByUniqueAttribute(" + typeName + ")");
             }
 
-            AtlasEntityType     entityType = ensureEntityType(typeName);
+            AtlasEntityType entityType = ensureEntityType(typeName);
             Map<String, Object> attributes = getAttributes(servletRequest);
-            String              guid       = entitiesStore.getGuidByUniqueAttributes(entityType, attributes);
+            String guid = entitiesStore.getGuidByUniqueAttributes(entityType, attributes);
 
             if (guid == null) {
                 throw new AtlasBaseException(AtlasErrorCode.INSTANCE_BY_UNIQUE_ATTRIBUTE_NOT_FOUND, typeName, attributes.toString());
@@ -474,9 +503,9 @@ public class EntityREST {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.updateClassificationsByUniqueAttribute(" + typeName + ")");
             }
 
-            AtlasEntityType     entityType = ensureEntityType(typeName);
+            AtlasEntityType entityType = ensureEntityType(typeName);
             Map<String, Object> attributes = getAttributes(servletRequest);
-            String              guid       = entitiesStore.getGuidByUniqueAttributes(entityType, attributes);
+            String guid = entitiesStore.getGuidByUniqueAttributes(entityType, attributes);
 
             if (guid == null) {
                 throw new AtlasBaseException(AtlasErrorCode.INSTANCE_BY_UNIQUE_ATTRIBUTE_NOT_FOUND, typeName, attributes.toString());
@@ -523,7 +552,7 @@ public class EntityREST {
      */
     @DELETE
     @Path("/uniqueAttribute/type/{typeName}/classification/{classificationName}")
-    public void deleteClassificationByUniqueAttribute(@PathParam("typeName") String typeName, @Context HttpServletRequest servletRequest,@PathParam("classificationName") String classificationName) throws AtlasBaseException {
+    public void deleteClassificationByUniqueAttribute(@PathParam("typeName") String typeName, @Context HttpServletRequest servletRequest, @PathParam("classificationName") String classificationName) throws AtlasBaseException {
         Servlets.validateQueryParamLength("typeName", typeName);
         Servlets.validateQueryParamLength("classificationName", classificationName);
 
@@ -534,9 +563,9 @@ public class EntityREST {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.deleteClassificationByUniqueAttribute(" + typeName + ")");
             }
 
-            AtlasEntityType     entityType = ensureEntityType(typeName);
+            AtlasEntityType entityType = ensureEntityType(typeName);
             Map<String, Object> attributes = getAttributes(servletRequest);
-            String              guid       = entitiesStore.getGuidByUniqueAttributes(entityType, attributes);
+            String guid = entitiesStore.getGuidByUniqueAttributes(entityType, attributes);
 
             if (guid == null) {
                 throw new AtlasBaseException(AtlasErrorCode.INSTANCE_BY_UNIQUE_ATTRIBUTE_NOT_FOUND, typeName, attributes.toString());
@@ -674,7 +703,7 @@ public class EntityREST {
         try {
             if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.createOrUpdate(entityCount=" +
-                                                                       (CollectionUtils.isEmpty(entities.getEntities()) ? 0 : entities.getEntities().size()) + ")");
+                        (CollectionUtils.isEmpty(entities.getEntities()) ? 0 : entities.getEntities().size()) + ")");
             }
 
             EntityStream entityStream = new AtlasEntityStream(entities);
@@ -701,7 +730,7 @@ public class EntityREST {
 
         try {
             if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.deleteByGuids(" + guids  + ")");
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.deleteByGuids(" + guids + ")");
             }
 
             return entitiesStore.deleteByIds(guids);
@@ -720,11 +749,11 @@ public class EntityREST {
 
         try {
             if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.addClassification(" + request  + ")");
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.addClassification(" + request + ")");
             }
 
             AtlasClassification classification = request == null ? null : request.getClassification();
-            List<String>        entityGuids    = request == null ? null : request.getEntityGuids();
+            List<String> entityGuids = request == null ? null : request.getEntityGuids();
 
             if (classification == null || StringUtils.isEmpty(classification.getTypeName())) {
                 throw new AtlasBaseException(AtlasErrorCode.INVALID_PARAMETERS, "no classification");
@@ -751,8 +780,8 @@ public class EntityREST {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.getAuditEvents(" + guid + ", " + startKey + ", " + count + ")");
             }
 
-            List                     events = auditRepository.listEvents(guid, startKey, count);
-            List<EntityAuditEventV2> ret    = new ArrayList<>();
+            List events = auditRepository.listEvents(guid, startKey, count);
+            List<EntityAuditEventV2> ret = new ArrayList<>();
 
             for (Object event : events) {
                 if (event instanceof EntityAuditEventV2) {
@@ -777,7 +806,7 @@ public class EntityREST {
         AtlasPerfTracer perf = null;
 
         try {
-            long  tagUpdateEndTime = System.currentTimeMillis();
+            long tagUpdateEndTime = System.currentTimeMillis();
 
             if (tagUpdateStartTime > tagUpdateEndTime) {
                 throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "fromTimestamp should be less than toTimestamp");
@@ -843,7 +872,7 @@ public class EntityREST {
 
                 if (key != null && key.startsWith(PREFIX_ATTR)) {
                     String[] values = e.getValue();
-                    String   value  = values != null && values.length > 0 ? values[0] : null;
+                    String value = values != null && values.length > 0 ? values[0] : null;
 
                     attributes.put(key.substring(PREFIX_ATTR.length()), value);
                 }
@@ -865,16 +894,16 @@ public class EntityREST {
                     continue;
                 }
 
-                int      sepPos = key.indexOf(':', PREFIX_ATTR_.length());
+                int sepPos = key.indexOf(':', PREFIX_ATTR_.length());
                 String[] values = entry.getValue();
-                String   value  = values != null && values.length > 0 ? values[0] : null;
+                String value = values != null && values.length > 0 ? values[0] : null;
 
                 if (sepPos == -1 || value == null) {
                     continue;
                 }
 
-                String              attrName   = key.substring(sepPos + 1);
-                String              listIdx    = key.substring(PREFIX_ATTR_.length(), sepPos);
+                String attrName = key.substring(sepPos + 1);
+                String listIdx = key.substring(PREFIX_ATTR_.length(), sepPos);
                 Map<String, Object> attributes = ret.get(listIdx);
 
                 if (attributes == null) {
