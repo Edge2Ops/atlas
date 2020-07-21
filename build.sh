@@ -14,4 +14,4 @@ echo "Maven Building"
 mvn clean -DskipTests package -Pdist
 
 echo "Sending build to s3"
-aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-public/atlas/
+aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-public/atlas/ --acl public-read
