@@ -328,8 +328,6 @@ public class AtlasAuthenticationFilter extends AuthenticationFilter {
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain filterChain) throws IOException, ServletException {
         final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-        if (((HttpServletRequest) request).getMethod() != "OPTIONS") {
-
             try {
                 Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
                 HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -346,18 +344,20 @@ public class AtlasAuthenticationFilter extends AuthenticationFilter {
                     }
                 }
 
-                if (existingAuth == null) {
-                    String authHeader = httpRequest.getHeader("Authorization");
+                if (((HttpServletRequest) request).getMethod() != "OPTIONS") {
+                    if (existingAuth == null) {
+                        String authHeader = httpRequest.getHeader("Authorization");
 
-                    if (authHeader != null && authHeader.startsWith("Basic")) {
-                        filterChain.doFilter(request, response);
-                    } else if (isKerberos) {
-                        doKerberosAuth(request, response, filterChain);
+                        if (authHeader != null && authHeader.startsWith("Basic")) {
+                            filterChain.doFilter(request, response);
+                        } else if (isKerberos) {
+                            doKerberosAuth(request, response, filterChain);
+                        } else {
+                            filterChain.doFilter(request, response);
+                        }
                     } else {
                         filterChain.doFilter(request, response);
                     }
-                } else {
-                    filterChain.doFilter(request, response);
                 }
             } catch (NullPointerException e) {
                 LOG.error("Exception in AtlasAuthenticationFilter ", e);
@@ -365,7 +365,6 @@ public class AtlasAuthenticationFilter extends AuthenticationFilter {
                 ((HttpServletResponse) response).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
                         "Authentication is enabled and user is not specified. Specify user.name parameter");
             }
-        }
     }
 
 
