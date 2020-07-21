@@ -328,40 +328,43 @@ public class AtlasAuthenticationFilter extends AuthenticationFilter {
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain filterChain) throws IOException, ServletException {
         final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-        try {
-            Authentication              existingAuth    = SecurityContextHolder.getContext().getAuthentication();
-            HttpServletResponse         httpResponse    = (HttpServletResponse) response;
-            AtlasResponseRequestWrapper responseWrapper = new AtlasResponseRequestWrapper(httpResponse);
+        if (((HttpServletRequest) request).getMethod() != "OPTIONS") {
 
-            HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.X_FRAME_OPTIONS_KEY);
-            HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.X_CONTENT_TYPE_OPTIONS_KEY);
-            HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.X_XSS_PROTECTION_KEY);
-            HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.STRICT_TRANSPORT_SEC_KEY);
+            try {
+                Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+                HttpServletResponse httpResponse = (HttpServletResponse) response;
+                AtlasResponseRequestWrapper responseWrapper = new AtlasResponseRequestWrapper(httpResponse);
 
-            if (headerProperties != null) {
-                for (String headerKey : headerProperties.stringPropertyNames()) {
-                    responseWrapper.setHeader(headerKey, headerProperties.getProperty(headerKey));
+                HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.X_FRAME_OPTIONS_KEY);
+                HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.X_CONTENT_TYPE_OPTIONS_KEY);
+                HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.X_XSS_PROTECTION_KEY);
+                HeadersUtil.setHeaderMapAttributes(responseWrapper, HeadersUtil.STRICT_TRANSPORT_SEC_KEY);
+
+                if (headerProperties != null) {
+                    for (String headerKey : headerProperties.stringPropertyNames()) {
+                        responseWrapper.setHeader(headerKey, headerProperties.getProperty(headerKey));
+                    }
                 }
-            }
 
-            if (existingAuth == null) {
-                String authHeader = httpRequest.getHeader("Authorization");
+                if (existingAuth == null) {
+                    String authHeader = httpRequest.getHeader("Authorization");
 
-                if (authHeader != null && authHeader.startsWith("Basic")) {
-                    filterChain.doFilter(request, response);
-                } else if (isKerberos) {
-                    doKerberosAuth(request, response, filterChain);
+                    if (authHeader != null && authHeader.startsWith("Basic")) {
+                        filterChain.doFilter(request, response);
+                    } else if (isKerberos) {
+                        doKerberosAuth(request, response, filterChain);
+                    } else {
+                        filterChain.doFilter(request, response);
+                    }
                 } else {
                     filterChain.doFilter(request, response);
                 }
-            } else {
-                filterChain.doFilter(request, response);
+            } catch (NullPointerException e) {
+                LOG.error("Exception in AtlasAuthenticationFilter ", e);
+                //PseudoAuthenticationHandler.getUserName() from hadoop-auth throws NPE if user name is not specified
+                ((HttpServletResponse) response).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+                        "Authentication is enabled and user is not specified. Specify user.name parameter");
             }
-        } catch (NullPointerException e) {
-            LOG.error("Exception in AtlasAuthenticationFilter ", e);
-            //PseudoAuthenticationHandler.getUserName() from hadoop-auth throws NPE if user name is not specified
-            ((HttpServletResponse) response).sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Authentication is enabled and user is not specified. Specify user.name parameter");
         }
     }
 
