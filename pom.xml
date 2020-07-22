@@ -730,7 +730,7 @@
         <!-- Storm dependencies -->
 
         <!-- keycloak dependencies -->
-        <keycloak.version>6.0.1</keycloak.version>
+        <keycloak.version>10.0.2.1</keycloak.version>
         <!-- keycloak dependencies -->
 
         <PermGen>64m</PermGen>

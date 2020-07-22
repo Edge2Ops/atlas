@@ -36,6 +36,14 @@ Security is both role based (RBAC) and attribute based (ABAC).
 Build Process
 =============
 
+## Build keycloak so that jar files are present in local maven repository
+
+1. Clone https://github.com/atlanhq/keycloak/
+2. Checkout `keycloak-atlas` branch
+3. Run `mvn install -Dmaven.test.skip -DskipTestsuite=true`
+
+
+## Build Atlas
 1. Get Atlas sources to your local directory, for example with following commands
    $ cd <your-local-directory>
    $ git clone https://github.com/apache/atlas.git
