@@ -670,6 +670,38 @@ public class GlossaryREST {
     }
 
     /**
+     * Get terms belonging to a specific glossary
+     * @param glossaryGuid unique identifier for glossary
+     * @param limit page size - by default there is no paging
+     * @param offset starting offset for loading terms
+     * @param sort ASC(default) or DESC
+     * @return List of terms associated with the glossary
+     * @throws AtlasBaseException
+     * @HTTP 200 List of glossary terms for the given glossary or an empty list
+     * @HTTP 404 If glossary guid in invalid
+     */
+    @GET
+    @Path("/{glossaryGuid}/terms/optimized")
+    public List<AtlasGlossaryTerm> getGlossaryTermsOptimized(@PathParam("glossaryGuid") String glossaryGuid,
+                                                    @DefaultValue("-1") @QueryParam("limit") String limit,
+                                                    @DefaultValue("0") @QueryParam("offset") String offset,
+                                                    @DefaultValue("ASC") @QueryParam("sort") final String sort,
+                                                    @DefaultValue("true") @QueryParam("isRoot") final boolean isRoot) throws AtlasBaseException {
+        Servlets.validateQueryParamLength("glossaryGuid", glossaryGuid);
+        AtlasPerfTracer perf = null;
+        try {
+            if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "GlossaryREST.getGlossaryTermsOptimized(" + glossaryGuid + ")");
+            }
+
+            return glossaryService.getGlossaryTermsOptimized(glossaryGuid, Integer.parseInt(offset), Integer.parseInt(limit), toSortOrder(sort), isRoot);
+
+        } finally {
+            AtlasPerfTracer.log(perf);
+        }
+    }
+
+    /**
      * Get term headers belonging to a specific glossary
      * @param glossaryGuid unique identifier for glossary
      * @param limit page size - by default there is no paging
