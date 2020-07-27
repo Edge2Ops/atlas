@@ -36,7 +36,6 @@ unzip mavel_local.zip -d ~/.m2
 
 ls ~/.m2
 
-exit
 echo "printing aws profiles..."
 echo "$(<~/.aws/credentials )"
 
