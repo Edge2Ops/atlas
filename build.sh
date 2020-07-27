@@ -27,6 +27,13 @@ aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile awsdepl
 aws configure set region eu-west-1 --profile awsdeploy
 
 # download local maven repository
+
+ls ~/.m2
+mkdir ~/.m2
+
+wget https://atlan-public.s3-eu-west-1.amazonaws.com/artifact/mavel_local.zip
+unzip mavel_local.zip -d ~/.m2
+
 ls ~/.m2
 
 exit
