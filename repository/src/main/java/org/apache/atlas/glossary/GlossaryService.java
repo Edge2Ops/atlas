@@ -784,6 +784,42 @@ public class GlossaryService {
         return ret;
     }
 
+    @GraphTransaction
+    public List<AtlasGlossaryTerm> getGlossaryTermsOptimized(String glossaryGuid, int offset, int limit, SortOrder sortOrder, boolean isRoot) throws AtlasBaseException {
+        if (Objects.isNull(glossaryGuid)) {
+            throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "glossaryGuid is null/empty");
+        }
+
+        if (DEBUG_ENABLED) {
+            LOG.debug("==> GlossaryService.getGlossaryTermsOptimized({}, {}, {}, {}, {})", glossaryGuid, offset, limit, sortOrder, isRoot);
+        }
+
+        AtlasAuthorizationUtils.verifyAccess(
+                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid)));
+
+        List<AtlasGlossaryTerm> ret = new ArrayList<>();
+        List<AtlasRelatedTermHeader> termHeaders = new ArrayList<>();
+        AtlasGraph<Object, Object> graph = AtlasGraphProvider.getGraphInstance();
+
+        GraphTraversal query = graph.V().has(Constants.GUID_PROPERTY_KEY, glossaryGuid)
+                .has(Constants.STATE_PROPERTY_KEY, P.within(Constants.ACTIVE_STATE_VALUE))
+                .out(GLOSSARY_TERMS_EDGE_LABEL)
+                .has(Constants.STATE_PROPERTY_KEY, P.within(Constants.ACTIVE_STATE_VALUE));
+
+        if (isRoot) {
+            query = query.where(__.inE(CATEGORY_TERMS_EDGE_LABEL).count().is(P.eq(0)));
+        }
+
+        runPaginatedTermsQuery(offset, limit, sortOrder, termHeaders, query);
+
+        for (AtlasRelatedTermHeader header : termHeaders) {
+            ret.add(dataAccess.load(getAtlasGlossaryTermSkeleton(header.getTermGuid())));
+        }
+
+        return ret;
+    }
+
+
     private void runPaginatedTermsQuery(int offset, int limit, SortOrder sortOrder, List<AtlasRelatedTermHeader> ret, GraphTraversal baseQuery) {
         if (sortOrder != null) {
             Order order = sortOrder == SortOrder.ASCENDING ? Order.asc : Order.desc;
