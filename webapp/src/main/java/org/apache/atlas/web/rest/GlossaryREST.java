@@ -890,6 +890,38 @@ public class GlossaryREST {
     }
 
     /**
+     * Get all terms associated with the specific category
+     * @param categoryGuid unique identifier for glossary category
+     * @param limit page size - by default there is no paging
+     * @param offset offset for pagination purpose
+     * @param sort ASC (default) or DESC
+     * @return List of associated terms
+     * @throws AtlasBaseException
+     * @HTTP 200 List of terms for the given category or an empty list
+     * @HTTP 404 If glossary category guid in invalid
+     */
+    @GET
+    @Path("/category/{categoryGuid}/terms/full")
+    public List<AtlasGlossaryTerm> getCategoryTermFull(@PathParam("categoryGuid") String categoryGuid,
+                                                                 @DefaultValue("-1") @QueryParam("limit") String limit,
+                                                                 @DefaultValue("0") @QueryParam("offset") String offset,
+                                                                 @DefaultValue("ASC") @QueryParam("sort") final String sort) throws AtlasBaseException {
+        Servlets.validateQueryParamLength("categoryGuid", categoryGuid);
+
+        AtlasPerfTracer perf = null;
+        try {
+            if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "GlossaryREST.getCategoryTerms(" + categoryGuid + ")");
+            }
+
+            return glossaryService.getCategoryTermsHeadersFull(categoryGuid, Integer.parseInt(offset), Integer.parseInt(limit), toSortOrder(sort));
+
+        } finally {
+            AtlasPerfTracer.log(perf);
+        }
+    }
+
+    /**
      * Get all related terms for a specific term
      * @param termGuid unique identifier for glossary term
      * @param limit page size - by default there is no paging
