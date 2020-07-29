@@ -45,6 +45,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.slf4j.Logger;
@@ -729,7 +730,7 @@ public class GlossaryService {
 
 
     @GraphTransaction
-    public List<AtlasRelatedTermHeader> getCategoryTermsHeadersOptimized(String categoryGuid, int offset, int limit, SortOrder sortOrder) throws AtlasBaseException {
+    public List<AtlasRelatedTermHeader> getCategoryTermsHeadersOptimized(String categoryGuid, String searchText, int offset, int limit, SortOrder sortOrder) throws AtlasBaseException {
         if (Objects.isNull(categoryGuid)) {
             throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "categoryGuid is null/empty");
         }
@@ -749,13 +750,17 @@ public class GlossaryService {
                 .out(CATEGORY_TERMS_EDGE_LABEL)
                 .has(Constants.STATE_PROPERTY_KEY, P.within(Constants.ACTIVE_STATE_VALUE));
 
+        if (searchText != "") {
+            query.has(TERM_DISPLAY_TEXT_KEY, TextP.containing(searchText));
+        }
+
         runPaginatedTermsQuery(offset, limit, sortOrder, ret, query);
 
         return ret;
     }
 
     @GraphTransaction
-    public List<AtlasGlossaryTerm> getCategoryTermsHeadersFull(String categoryGuid, int offset, int limit, SortOrder sortOrder) throws AtlasBaseException {
+    public List<AtlasGlossaryTerm> getCategoryTermsHeadersFull(String categoryGuid, String searchText, int offset, int limit, SortOrder sortOrder) throws AtlasBaseException {
         if (Objects.isNull(categoryGuid)) {
             throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "categoryGuid is null/empty");
         }
@@ -776,6 +781,10 @@ public class GlossaryService {
                 .out(CATEGORY_TERMS_EDGE_LABEL)
                 .has(Constants.STATE_PROPERTY_KEY, P.within(Constants.ACTIVE_STATE_VALUE));
 
+        if (searchText != "") {
+            query.has(TERM_DISPLAY_TEXT_KEY, TextP.containing(searchText));
+        }
+
         runPaginatedTermsQuery(offset, limit, sortOrder, termHeaders, query);
 
         for (AtlasRelatedTermHeader header : termHeaders) {
@@ -786,7 +795,7 @@ public class GlossaryService {
     }
 
     @GraphTransaction
-    public List<AtlasRelatedTermHeader> getGlossaryTermsHeadersOptimized(String glossaryGuid, int offset, int limit, SortOrder sortOrder, boolean isRoot) throws AtlasBaseException {
+    public List<AtlasRelatedTermHeader> getGlossaryTermsHeadersOptimized(String glossaryGuid, String searchText, int offset, int limit, SortOrder sortOrder, boolean isRoot) throws AtlasBaseException {
         if (Objects.isNull(glossaryGuid)) {
             throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "glossaryGuid is null/empty");
         }
@@ -810,13 +819,17 @@ public class GlossaryService {
             query = query.where(__.inE(CATEGORY_TERMS_EDGE_LABEL).count().is(P.eq(0)));
         }
 
+        if (searchText != "") {
+            query.has(TERM_DISPLAY_TEXT_KEY, TextP.containing(searchText));
+        }
+
         runPaginatedTermsQuery(offset, limit, sortOrder, ret, query);
 
         return ret;
     }
 
     @GraphTransaction
-    public List<AtlasGlossaryTerm> getGlossaryTermsOptimized(String glossaryGuid, int offset, int limit, SortOrder sortOrder, boolean isRoot) throws AtlasBaseException {
+    public List<AtlasGlossaryTerm> getGlossaryTermsOptimized(String glossaryGuid, String searchText, int offset, int limit, SortOrder sortOrder, boolean isRoot) throws AtlasBaseException {
         if (Objects.isNull(glossaryGuid)) {
             throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "glossaryGuid is null/empty");
         }
@@ -839,6 +852,10 @@ public class GlossaryService {
 
         if (isRoot) {
             query = query.where(__.inE(CATEGORY_TERMS_EDGE_LABEL).count().is(P.eq(0)));
+        }
+
+        if (searchText != "") {
+            query.has(TERM_DISPLAY_TEXT_KEY, TextP.containing(searchText));
         }
 
         runPaginatedTermsQuery(offset, limit, sortOrder, termHeaders, query);
@@ -875,7 +892,7 @@ public class GlossaryService {
     }
 
     @GraphTransaction
-    public List<AtlasRelatedCategoryHeader> getGlossaryCategoriesHeadersOptimized(String glossaryGuid, int offset, int limit, SortOrder sortOrder) throws AtlasBaseException {
+    public List<AtlasRelatedCategoryHeader> getGlossaryCategoriesHeadersOptimized(String glossaryGuid, String searchText, int offset, int limit, SortOrder sortOrder) throws AtlasBaseException {
         if (Objects.isNull(glossaryGuid)) {
             throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "glossaryGuid is null/empty");
         }

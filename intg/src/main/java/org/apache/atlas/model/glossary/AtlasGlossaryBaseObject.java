@@ -35,6 +35,12 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
     protected String name;
     protected String shortDescription;
     protected String longDescription;
+
+    protected long createTime;
+    protected long updateTime;
+    protected String createdBy;
+    protected String updatedBy;
+
     private Map<String, Object> additionalAttributes;
 
     // Classifications
@@ -93,6 +99,38 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
         this.longDescription = longDescription;
     }
 
+    public void setCreateTime(final long createTime) {
+        this.createTime = createTime;
+    }
+
+    public long getCreateTime() {
+        return this.createTime;
+    }
+
+    public void setUpdateTime(final long updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public long getUpdateTime() {
+        return this.updateTime;
+    }
+
+    public void setCreatedBy(final String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getCreatedBy() {
+        return this.createdBy;
+    }
+
+    public void getUpdatedBy(final String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public String getUpdatedBy() {
+        return this.updatedBy;
+    }
+
     abstract public void setAttribute(String attrName, String attrVal);
 
     public List<AtlasClassification> getClassifications() {
@@ -146,6 +184,10 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
         sb.append(", shortDescription='").append(shortDescription).append('\'');
         sb.append(", longDescription='").append(longDescription).append('\'');
         sb.append(", classifications=").append(classifications).append('\'');
+        sb.append(", createTime=").append(createTime).append('\'');
+        sb.append(", updateTime=").append(updateTime).append('\'');
+        sb.append(", createdBy=").append(createdBy).append('\'');
+        sb.append(", updatedBy=").append(updatedBy).append('\'');
         sb.append(", additionalAttributes=").append(additionalAttributes);
 
         return sb;
