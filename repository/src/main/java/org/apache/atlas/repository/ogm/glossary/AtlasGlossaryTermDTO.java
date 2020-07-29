@@ -64,6 +64,10 @@ public class AtlasGlossaryTermDTO extends AbstractGlossaryDTO<AtlasGlossaryTerm>
         ret.setAbbreviation((String) entity.getAttribute("abbreviation"));
         ret.setUsage((String) entity.getAttribute("usage"));
         ret.setAdditionalAttributes((Map) entity.getAttribute("additionalAttributes"));
+        ret.setCreatedBy(entity.getCreatedBy());
+        ret.getUpdatedBy(entity.getUpdatedBy());
+        ret.setCreateTime(entity.getCreateTime().getTime());
+        ret.setUpdateTime(entity.getUpdateTime().getTime());
 
         Object anchor = entity.getRelationshipAttribute("anchor");
         if (anchor instanceof AtlasRelatedObjectId) {
