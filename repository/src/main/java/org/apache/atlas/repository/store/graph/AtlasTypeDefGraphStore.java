@@ -351,12 +351,12 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
     public AtlasTypesDef createTypesDef(AtlasTypesDef typesDef) throws AtlasBaseException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> AtlasTypeDefGraphStore.createTypesDef(enums={}, structs={}, classifications={}, entities={}, relationships={}, businessMetadataDefs={})",
-                    CollectionUtils.size(typesDef.getEnumDefs()),
-                    CollectionUtils.size(typesDef.getStructDefs()),
-                    CollectionUtils.size(typesDef.getClassificationDefs()),
-                    CollectionUtils.size(typesDef.getEntityDefs()),
-                    CollectionUtils.size(typesDef.getRelationshipDefs()),
-                    CollectionUtils.size(typesDef.getBusinessMetadataDefs()));
+                    CollectionUtils.isNotEmpty(typesDef.getEnumDefs()) ? CollectionUtils.size(typesDef.getEnumDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getStructDefs()) ? CollectionUtils.size(typesDef.getStructDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getClassificationDefs()) ? CollectionUtils.size(typesDef.getClassificationDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getEntityDefs()) ? CollectionUtils.size(typesDef.getEntityDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getRelationshipDefs()) ? CollectionUtils.size(typesDef.getRelationshipDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getBusinessMetadataDefs()) ? CollectionUtils.size(typesDef.getBusinessMetadataDefs()) : 0);
         }
 
         AtlasTransientTypeRegistry ttr = lockTypeRegistryAndReleasePostCommit();
@@ -373,12 +373,12 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== AtlasTypeDefGraphStore.createTypesDef(enums={}, structs={}, classfications={}, entities={}, relationships={}, businessMetadataDefs={})",
-                    CollectionUtils.size(typesDef.getEnumDefs()),
-                    CollectionUtils.size(typesDef.getStructDefs()),
-                    CollectionUtils.size(typesDef.getClassificationDefs()),
-                    CollectionUtils.size(typesDef.getEntityDefs()),
-                    CollectionUtils.size(typesDef.getRelationshipDefs()),
-                    CollectionUtils.size(typesDef.getBusinessMetadataDefs()));
+                    CollectionUtils.isNotEmpty(typesDef.getEnumDefs()) ? CollectionUtils.size(typesDef.getEnumDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getStructDefs()) ? CollectionUtils.size(typesDef.getStructDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getClassificationDefs()) ? CollectionUtils.size(typesDef.getClassificationDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getEntityDefs()) ? CollectionUtils.size(typesDef.getEntityDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getRelationshipDefs()) ? CollectionUtils.size(typesDef.getRelationshipDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getBusinessMetadataDefs()) ? CollectionUtils.size(typesDef.getBusinessMetadataDefs()) : 0);
         }
 
         return ret;
@@ -457,12 +457,12 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
     public AtlasTypesDef updateTypesDef(AtlasTypesDef typesDef) throws AtlasBaseException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> AtlasTypeDefGraphStore.updateTypesDef(enums={}, structs={}, classfications={}, entities={}, relationships{}, businessMetadataDefs={})",
-                    CollectionUtils.size(typesDef.getEnumDefs()),
-                    CollectionUtils.size(typesDef.getStructDefs()),
-                    CollectionUtils.size(typesDef.getClassificationDefs()),
-                    CollectionUtils.size(typesDef.getEntityDefs()),
-                    CollectionUtils.size(typesDef.getRelationshipDefs()),
-                    CollectionUtils.size(typesDef.getBusinessMetadataDefs()));
+                    CollectionUtils.isNotEmpty(typesDef.getEnumDefs()) ? CollectionUtils.size(typesDef.getEnumDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getStructDefs()) ? CollectionUtils.size(typesDef.getStructDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getClassificationDefs()) ? CollectionUtils.size(typesDef.getClassificationDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getEntityDefs()) ? CollectionUtils.size(typesDef.getEntityDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getRelationshipDefs()) ? CollectionUtils.size(typesDef.getRelationshipDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getBusinessMetadataDefs()) ? CollectionUtils.size(typesDef.getBusinessMetadataDefs()) : 0);
         }
 
         AtlasTransientTypeRegistry ttr = lockTypeRegistryAndReleasePostCommit();
@@ -488,12 +488,12 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== AtlasTypeDefGraphStore.updateTypesDef(enums={}, structs={}, classfications={}, entities={}, relationships={}, businessMetadataDefs={})",
-                    CollectionUtils.size(typesDef.getEnumDefs()),
-                    CollectionUtils.size(typesDef.getStructDefs()),
-                    CollectionUtils.size(typesDef.getClassificationDefs()),
-                    CollectionUtils.size(typesDef.getEntityDefs()),
-                    CollectionUtils.size(typesDef.getRelationshipDefs()),
-                    CollectionUtils.size(typesDef.getBusinessMetadataDefs()));
+                    CollectionUtils.isNotEmpty(typesDef.getEnumDefs()) ? CollectionUtils.size(typesDef.getEnumDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getStructDefs()) ? CollectionUtils.size(typesDef.getStructDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getClassificationDefs()) ? CollectionUtils.size(typesDef.getClassificationDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getEntityDefs()) ? CollectionUtils.size(typesDef.getEntityDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getRelationshipDefs()) ? CollectionUtils.size(typesDef.getRelationshipDefs()) : 0,
+                    CollectionUtils.isNotEmpty(typesDef.getBusinessMetadataDefs()) ? CollectionUtils.size(typesDef.getBusinessMetadataDefs()) : 0);
         }
 
         return ret;
