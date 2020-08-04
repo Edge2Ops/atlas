@@ -688,9 +688,10 @@ public class AtlasRelationshipStoreV2 implements AtlasRelationshipStore {
           +-------------+-------+------------+------------+------+
          */
 
-        if (edgePropagation != NONE && typePropagation != BOTH && edgePropagation != typePropagation) {
-            throw new AtlasBaseException(AtlasErrorCode.INVALID_PROPAGATION_TYPE, edgePropagation.toString(), relationshipName, typePropagation.toString());
-        }
+//        Todo - Add this later on when propagation is figured out
+//        if (edgePropagation != NONE && typePropagation != BOTH && edgePropagation != typePropagation) {
+//            throw new AtlasBaseException(AtlasErrorCode.INVALID_PROPAGATION_TYPE, edgePropagation.toString(), relationshipName, typePropagation.toString());
+//        }
 
         List<String>      messages     = new ArrayList<>();
 
