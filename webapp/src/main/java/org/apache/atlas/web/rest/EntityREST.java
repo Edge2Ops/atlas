@@ -750,6 +750,36 @@ public class EntityREST {
     }
 
     /**
+     * Bulk API to retrieve list of entities identified by its GUIDs.
+     */
+    @GET
+    @Path("/bulk/headers/optimized")
+    public List<AtlasEntityHeader> getHeadersByGuids(@QueryParam("guid") List<String> guids) throws AtlasBaseException {
+        if (CollectionUtils.isNotEmpty(guids)) {
+            for (String guid : guids) {
+                Servlets.validateQueryParamLength("guid", guid);
+            }
+        }
+
+        AtlasPerfTracer perf = null;
+
+        try {
+            if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.getByGuids(" + guids + ")");
+            }
+
+            if (CollectionUtils.isEmpty(guids)) {
+                throw new AtlasBaseException(AtlasErrorCode.INSTANCE_GUID_NOT_FOUND, guids);
+            }
+
+            return entitiesStore.getHeadersById(guids);
+        } finally {
+            AtlasPerfTracer.log(perf);
+        }
+    }
+
+
+    /**
      * Bulk API to create new entities or updates existing entities in Atlas.
      * Existing entity is matched using its unique guid if supplied or by its unique attributes eg: qualifiedName
      */
