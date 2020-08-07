@@ -867,7 +867,7 @@ public class EntityREST {
     }
 
     @GET
-    @Path("bulk/headers")
+    @Path("/bulk/headers")
     @Produces(Servlets.JSON_MEDIA_TYPE)
     public AtlasEntityHeaders getEntityHeaders(@QueryParam("tagUpdateStartTime") long tagUpdateStartTime) throws AtlasBaseException {
         AtlasPerfTracer perf = null;

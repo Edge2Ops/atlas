@@ -50,6 +50,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
@@ -59,13 +60,15 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.web.util.matcher.*;
 import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 import javax.inject.Inject;
+import javax.security.cert.X509Certificate;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -133,7 +136,7 @@ public class AtlasSecurityConfig extends WebSecurityConfigurerAdapter {
         AuthenticationEntryPoint authenticationEntryPoint;
 
         if (keycloakEnabled) {
-            KeycloakAuthenticationEntryPoint keycloakAuthenticationEntryPoint = new KeycloakAuthenticationEntryPoint(adapterDeploymentContext());
+            CustomKeycloakAuthenticationEntrypoint keycloakAuthenticationEntryPoint = new CustomKeycloakAuthenticationEntrypoint(adapterDeploymentContext());
             keycloakAuthenticationEntryPoint.setRealm("atlas.com");
             keycloakAuthenticationEntryPoint.setLoginUri("/login.jsp");
             authenticationEntryPoint = keycloakAuthenticationEntryPoint;
@@ -146,11 +149,48 @@ public class AtlasSecurityConfig extends WebSecurityConfigurerAdapter {
         return authenticationEntryPoint;
     }
 
+    public AuthenticationEntryPoint getSCAuthenticationEntryPoint() throws Exception {
+        AuthenticationEntryPoint authenticationEntryPoint;
+
+        if (keycloakEnabled) {
+            AdapterDeploymentContext context = adapterDeploymentContext();
+            KeycloakDeployment deployment = context.resolveDeployment(null);
+            deployment.setRealm("socialcops");
+            AdapterConfig cfg = new AdapterConfig();
+            cfg.setAuthServerUrl(deployment.getAuthServerBaseUrl());
+            cfg.setSslRequired(deployment.getSslRequired().toString());
+            cfg.setResource(deployment.getResourceName());
+            cfg.setPublicClient(false);
+            cfg.setConfidentialPort(deployment.getConfidentialPort());
+            cfg.setPrincipalAttribute(deployment.getPrincipalAttribute());
+            cfg.setAutodetectBearerOnly(true);
+            cfg.setCredentials(deployment.getResourceCredentials());
+            cfg.setRealm("socialcops");
+            context.updateDeployment(cfg);
+            CustomKeycloakAuthenticationEntrypoint keycloakAuthenticationEntryPoint = new CustomKeycloakAuthenticationEntrypoint(context);
+            keycloakAuthenticationEntryPoint.setRealm("atlas.com");
+            keycloakAuthenticationEntryPoint.setLoginUri("/login.jsp");
+            authenticationEntryPoint = keycloakAuthenticationEntryPoint;
+        } else {
+            LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> entryPointMap = new LinkedHashMap<>();
+            entryPointMap.put(new RequestHeaderRequestMatcher(HeadersUtil.USER_AGENT_KEY, HeadersUtil.USER_AGENT_VALUE), atlasAuthenticationEntryPoint);
+            AtlasDelegatingAuthenticationEntryPoint basicAuthenticationEntryPoint = new AtlasDelegatingAuthenticationEntryPoint(entryPointMap);
+            authenticationEntryPoint = basicAuthenticationEntryPoint;
+        }
+        return authenticationEntryPoint;
+    }
+
+
     public DelegatingAuthenticationEntryPoint getDelegatingAuthenticationEntryPoint() throws Exception {
         LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> entryPointMap = new LinkedHashMap<>();
         entryPointMap.put(new RequestHeaderRequestMatcher(HeadersUtil.USER_AGENT_KEY, HeadersUtil.USER_AGENT_VALUE), atlasAuthenticationEntryPoint);
+//        entryPointMap.put(new AntPathRequestMatcher("/**"), getSCAuthenticationEntryPoint());
+//        entryPointMap.put(new RegexRequestMatcher("^*$", null), getAuthenticationEntryPoint());
         DelegatingAuthenticationEntryPoint entryPoint = new DelegatingAuthenticationEntryPoint(entryPointMap);
         entryPoint.setDefaultEntryPoint(getAuthenticationEntryPoint());
+
+//        entryPoint.setDefaultEntryPoint(new CustomDefaultEntrypoint());
+
         return entryPoint;
     }
 
@@ -201,7 +241,7 @@ public class AtlasSecurityConfig extends WebSecurityConfigurerAdapter {
                     .newSession()
                 .and()
                 .httpBasic()
-                .authenticationEntryPoint(getDelegatingAuthenticationEntryPoint())
+                .authenticationEntryPoint(getAuthenticationEntryPoint())
                 .and()
                     .formLogin()
                         .loginPage("/login.jsp")
@@ -290,8 +330,8 @@ public class AtlasSecurityConfig extends WebSecurityConfigurerAdapter {
         return new HttpSessionManager();
     }
 
-    protected KeycloakLogoutHandler keycloakLogoutHandler() throws Exception {
-        return new KeycloakLogoutHandler(adapterDeploymentContext());
+    protected CustomKeycloakLogoutHandler keycloakLogoutHandler() throws Exception {
+        return new CustomKeycloakLogoutHandler(adapterDeploymentContext());
     }
 
     @Bean
@@ -305,8 +345,8 @@ public class AtlasSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected KeycloakAuthenticationProcessingFilter keycloakAuthenticationProcessingFilter() throws Exception {
-        KeycloakAuthenticationProcessingFilter filter = new KeycloakAuthenticationProcessingFilter(authenticationManagerBean(), KEYCLOAK_REQUEST_MATCHER);
+    protected CustomKeycloakAuthenticationProcessingFilter keycloakAuthenticationProcessingFilter() throws Exception {
+        CustomKeycloakAuthenticationProcessingFilter filter = new CustomKeycloakAuthenticationProcessingFilter(authenticationManagerBean(), KEYCLOAK_REQUEST_MATCHER);
         filter.setSessionAuthenticationStrategy(sessionAuthenticationStrategy());
         return filter;
     }

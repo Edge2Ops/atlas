@@ -231,6 +231,12 @@ public class AtlasAuthorizationUtils {
     public static String getCurrentUserName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
+        try {
+            System.out.println("authentication details");
+            System.out.println(auth.getDetails());
+        } catch (Exception e) {
+        }
+
         return auth != null ? auth.getName() : "";
     }
 
