@@ -194,6 +194,34 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
 
     @Override
     @GraphTransaction
+    public List<AtlasEntityHeader> getHeadersById(final List<String> guids) throws AtlasBaseException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getHeaderById({})", guids);
+        }
+
+        EntityGraphRetriever entityRetriever = new EntityGraphRetriever(graph, typeRegistry);
+
+        List<AtlasEntityHeader> ret = new ArrayList<>();
+
+        for (String guid : guids) {
+            ret.add(entityRetriever.toAtlasEntityHeader(guid));
+
+            // Not verifying access here because this is used to show entity information in propagated classifications
+            // and if the user doesn't have access to one entity, the complete request shouldn't fail.
+            // Also we cannot just remove the entity directly.
+            // Plus, the header doesn't have sensitive information.
+
+            // AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.ENTITY_READ, entityRetriever.toAtlasEntityHeader(guid)), "read entity: guid=", guid);
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getHeadersById({}): {}", guids, ret);
+        }
+
+        return ret;
+    }
+
+    @Override
+    @GraphTransaction
     public AtlasEntitiesWithExtInfo getByIds(List<String> guids) throws AtlasBaseException {
         return getByIds(guids, false, false);
     }
