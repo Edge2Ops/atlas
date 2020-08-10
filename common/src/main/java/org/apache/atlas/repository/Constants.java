@@ -37,6 +37,7 @@ public final class Constants {
     public static final String INTERNAL_PROPERTY_KEY_PREFIX     = "__";
     public static final String RELATIONSHIP_PROPERTY_KEY_PREFIX = "_r";
     public static final String GUID_PROPERTY_KEY                = encodePropertyKey(INTERNAL_PROPERTY_KEY_PREFIX + "guid");
+    public static final String ENTITY_GUID_PROPERTY_KEY         = encodePropertyKey(INTERNAL_PROPERTY_KEY_PREFIX + "entityGuid");
     public static final String RELATIONSHIP_GUID_PROPERTY_KEY   = encodePropertyKey(RELATIONSHIP_PROPERTY_KEY_PREFIX + GUID_PROPERTY_KEY);
     public static final String HISTORICAL_GUID_PROPERTY_KEY     = encodePropertyKey(INTERNAL_PROPERTY_KEY_PREFIX + "historicalGuids");
     public static final String FREETEXT_REQUEST_HANDLER         = "/freetext";
