@@ -26,24 +26,25 @@ import org.apache.atlas.SortOrder;
 import org.apache.atlas.discovery.SearchProcessor;
 import org.apache.atlas.exception.AtlasBaseException;
 import org.apache.atlas.model.TypeCategory;
+import org.apache.atlas.model.instance.AtlasClassification;
 import org.apache.atlas.model.instance.AtlasEntity;
 import org.apache.atlas.model.instance.AtlasEntity.Status;
 import org.apache.atlas.model.typedef.AtlasBaseTypeDef;
 import org.apache.atlas.model.typedef.AtlasEnumDef;
 import org.apache.atlas.repository.Constants;
+import org.apache.atlas.repository.converters.AtlasFormatConverters;
+import org.apache.atlas.repository.converters.AtlasInstanceConverter;
+import org.apache.atlas.repository.graph.FullTextMapperV2;
 import org.apache.atlas.repository.graph.GraphHelper;
-import org.apache.atlas.repository.graphdb.AtlasEdge;
-import org.apache.atlas.repository.graphdb.AtlasElement;
-import org.apache.atlas.repository.graphdb.AtlasGraph;
-import org.apache.atlas.repository.graphdb.AtlasGraphQuery;
-import org.apache.atlas.repository.graphdb.AtlasIndexQuery;
+import org.apache.atlas.repository.graph.IFullTextMapper;
+import org.apache.atlas.repository.graphdb.*;
 import org.apache.atlas.repository.graphdb.AtlasIndexQuery.Result;
-import org.apache.atlas.repository.graphdb.AtlasVertex;
-import org.apache.atlas.type.AtlasEntityType;
-import org.apache.atlas.type.AtlasEnumType;
-import org.apache.atlas.type.AtlasStructType;
+import org.apache.atlas.repository.store.graph.AtlasRelationshipStore;
+import org.apache.atlas.repository.store.graph.v1.DeleteHandlerDelegate;
+import org.apache.atlas.repository.store.graph.v2.bulkimport.EntityChangeNotifierNop;
+import org.apache.atlas.repository.store.graph.v2.bulkimport.FullTextMapperV2Nop;
+import org.apache.atlas.type.*;
 import org.apache.atlas.type.AtlasStructType.AtlasAttribute;
-import org.apache.atlas.type.AtlasType;
 import org.apache.atlas.util.FileUtils;
 import org.apache.atlas.utils.AtlasPerfMetrics;
 import org.apache.atlas.utils.AtlasPerfMetrics.MetricRecorder;
@@ -72,6 +73,8 @@ import static org.apache.atlas.repository.Constants.STATE_PROPERTY_KEY;
 import static org.apache.atlas.repository.Constants.TYPENAME_PROPERTY_KEY;
 import static org.apache.atlas.repository.Constants.TYPE_NAME_PROPERTY_KEY;
 import static org.apache.atlas.repository.graph.AtlasGraphProvider.getGraphInstance;
+import static org.apache.atlas.repository.graph.GraphHelper.getClassificationVertex;
+import static org.apache.atlas.repository.graph.GraphHelper.getTraitNames;
 import static org.apache.atlas.repository.graphdb.AtlasGraphQuery.SortOrder.ASC;
 import static org.apache.atlas.repository.graphdb.AtlasGraphQuery.SortOrder.DESC;
 
@@ -424,6 +427,30 @@ public class AtlasGraphUtilsV2 {
         }
 
         return hasInstanceVertex;
+    }
+
+    public static void deleteAllEdgesForType(AtlasTypeRegistry typeRegistry, String typeName) throws AtlasBaseException {
+        AtlasGraph graph = getGraphInstance();
+        AtlasGraphQuery query = graph
+                .query()
+                .has(TYPE_NAME_PROPERTY_KEY, AtlasGraphQuery.ComparisionOperator.EQUAL, typeName);
+
+        Iterator<AtlasVertex> results = query.vertices().iterator();
+
+        DeleteHandlerDelegate deleteDelegate = new DeleteHandlerDelegate(graph, typeRegistry);
+        AtlasInstanceConverter instanceConverter = new AtlasInstanceConverter(graph, typeRegistry, new AtlasFormatConverters(typeRegistry));
+        IFullTextMapper fullTextMapper = new FullTextMapperV2Nop();
+        IAtlasEntityChangeNotifier entityChangeNotifier = new EntityChangeNotifierNop();
+        AtlasRelationshipStore relationshipStore = new AtlasRelationshipStoreV2(graph, typeRegistry, deleteDelegate, entityChangeNotifier);
+
+        EntityGraphMapper graphMapper = new EntityGraphMapper(deleteDelegate, typeRegistry, graph, relationshipStore, entityChangeNotifier, instanceConverter, fullTextMapper);
+
+        for (Iterator<AtlasVertex> it = results; it.hasNext(); ) {
+            AtlasVertex result = it.next();
+            String guid = result.getJsonProperty(Constants.ENTITY_GUID_PROPERTY_KEY);
+            graphMapper.deleteClassification(guid, typeName);
+        }
+
     }
 
     public static AtlasVertex findByTypeAndUniquePropertyName(String typeName, String propertyName, Object attrVal) {
