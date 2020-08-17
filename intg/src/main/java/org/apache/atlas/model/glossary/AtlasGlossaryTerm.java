@@ -321,6 +321,8 @@ public class AtlasGlossaryTerm extends AtlasGlossaryBaseObject {
             case "usage":
                 setUsage(attrVal);
                 break;
+            case "tenant":
+                setTenant(attrVal);
             default:
                 throw new IllegalArgumentException("Invalid attribute '" + attrName + "' for object AtlasGlossaryTerm");
         }

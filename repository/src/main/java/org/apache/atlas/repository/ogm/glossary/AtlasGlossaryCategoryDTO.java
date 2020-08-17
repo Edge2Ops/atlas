@@ -58,6 +58,7 @@ public class AtlasGlossaryCategoryDTO extends AbstractGlossaryDTO<AtlasGlossaryC
         ret.setShortDescription((String) entity.getAttribute("shortDescription"));
         ret.setLongDescription((String) entity.getAttribute("longDescription"));
         ret.setAdditionalAttributes((Map) entity.getAttribute("additionalAttributes"));
+        ret.setTenant((String) entity.getAttribute("tenant"));
 
         Object anchor = entity.getRelationshipAttribute("anchor");
         if (anchor instanceof AtlasRelatedObjectId) {
@@ -127,6 +128,7 @@ public class AtlasGlossaryCategoryDTO extends AbstractGlossaryDTO<AtlasGlossaryC
         ret.setAttribute("longDescription", obj.getLongDescription());
         ret.setAttribute("anchor", new AtlasObjectId(obj.getAnchor().getGlossaryGuid()));
         ret.setAttribute("additionalAttributes", obj.getAdditionalAttributes());
+        ret.setAttribute("tenant", obj.getTenant());
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== AtlasGlossaryCategoryDTO.toEntity() : {}", ret);

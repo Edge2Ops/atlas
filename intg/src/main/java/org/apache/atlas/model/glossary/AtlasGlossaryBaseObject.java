@@ -41,6 +41,8 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
     protected String createdBy;
     protected String updatedBy;
 
+    protected String tenant;
+
     private Map<String, Object> additionalAttributes;
 
     // Classifications
@@ -57,6 +59,7 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
         this.classifications = other.classifications;
         this.qualifiedName = other.qualifiedName;
         this.additionalAttributes = other.additionalAttributes;
+        this.tenant = other.tenant;
     }
 
     public Map<String, Object> getAdditionalAttributes() {
@@ -123,12 +126,20 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
         return this.createdBy;
     }
 
-    public void getUpdatedBy(final String updatedBy) {
+    public void setUpdatedBy(final String updatedBy) {
         this.updatedBy = updatedBy;
     }
 
     public String getUpdatedBy() {
         return this.updatedBy;
+    }
+
+    public String getTenant() {
+        return this.tenant;
+    }
+
+    public void setTenant(final String tenant) {
+        this.tenant = tenant;
     }
 
     abstract public void setAttribute(String attrName, String attrVal);
@@ -169,7 +180,8 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
                 Objects.equals(shortDescription, that.shortDescription) &&
                 Objects.equals(longDescription, that.longDescription) &&
                 Objects.equals(additionalAttributes, that.additionalAttributes) &&
-                Objects.equals(classifications, that.classifications);
+                Objects.equals(classifications, that.classifications) &&
+                Objects.equals(tenant, that.tenant);
     }
 
     @Override
@@ -188,6 +200,7 @@ public abstract class AtlasGlossaryBaseObject extends AtlasBaseModelObject {
         sb.append(", updateTime=").append(updateTime).append('\'');
         sb.append(", createdBy=").append(createdBy).append('\'');
         sb.append(", updatedBy=").append(updatedBy).append('\'');
+        sb.append(", tenant=").append(tenant).append('\'');
         sb.append(", additionalAttributes=").append(additionalAttributes);
 
         return sb;

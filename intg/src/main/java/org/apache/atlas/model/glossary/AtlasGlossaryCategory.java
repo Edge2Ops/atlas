@@ -131,6 +131,9 @@ public class AtlasGlossaryCategory extends AtlasGlossaryBaseObject {
             case "longDescription":
                 setLongDescription(attrVal);
                 break;
+            case "tenant":
+                setTenant(tenant);
+                break;
             default:
                 throw new IllegalArgumentException("Invalid attribute '" + attrName + "' for object AtlasGlossaryCategory");
         }
