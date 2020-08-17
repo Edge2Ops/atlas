@@ -293,4 +293,6 @@ public interface AtlasEntityStore {
      *
      */
     BulkImportResponse bulkCreateOrUpdateBusinessAttributes(InputStream inputStream, String fileName) throws AtlasBaseException;
+
+    List<AtlasEntityHeader> getHeadersById(List<String> guids) throws AtlasBaseException;
 }
