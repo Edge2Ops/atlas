@@ -148,7 +148,7 @@ public class GlossaryService {
             if (isNameInvalid(atlasGlossary.getName())) {
                 throw new AtlasBaseException(AtlasErrorCode.INVALID_DISPLAY_NAME);
             } else {
-                atlasGlossary.setQualifiedName(atlasGlossary.getName());
+                atlasGlossary.setQualifiedName(atlasGlossary.getTenant() + "/" + atlasGlossary.getName());
             }
         }
 
@@ -345,7 +345,7 @@ public class GlossaryService {
             // Derive the qualifiedName
             String anchorGlossaryGuid = glossaryTerm.getAnchor().getGlossaryGuid();
             AtlasGlossary glossary = dataAccess.load(getGlossarySkeleton(anchorGlossaryGuid));
-            glossaryTerm.setQualifiedName(glossaryTerm.getName() + "@" + glossary.getQualifiedName());
+            glossaryTerm.setQualifiedName(glossaryTerm.getTenant() + "/" + glossaryTerm.getName() + "@" + glossary.getQualifiedName());
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Derived qualifiedName = {}", glossaryTerm.getQualifiedName());
@@ -553,7 +553,7 @@ public class GlossaryService {
             // Derive the qualifiedName
             String anchorGlossaryGuid = glossaryCategory.getAnchor().getGlossaryGuid();
             AtlasGlossary glossary = dataAccess.load(getGlossarySkeleton(anchorGlossaryGuid));
-            glossaryCategory.setQualifiedName(glossaryCategory.getName() + "@" + glossary.getQualifiedName());
+            glossaryCategory.setQualifiedName(glossaryCategory.getTenant() + "/" + glossaryCategory.getName() + "@" + glossary.getQualifiedName());
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Derived qualifiedName = {}", glossaryCategory.getQualifiedName());
