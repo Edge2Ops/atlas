@@ -53,6 +53,7 @@ import java.util.UUID;
 import static org.apache.atlas.repository.Constants.TYPE_CATEGORY_PROPERTY_KEY;
 import static org.apache.atlas.repository.Constants.VERTEX_TYPE_PROPERTY_KEY;
 import static org.apache.atlas.repository.store.graph.v2.AtlasGraphUtilsV2.VERTEX_TYPE;
+import static org.apache.atlas.repository.store.graph.v2.AtlasGraphUtilsV2.getQualifiedAttributePropertyKey;
 
 
 /**
@@ -462,6 +463,11 @@ public class AtlasTypeDefGraphStoreV2 extends AtlasTypeDefGraphStore {
 
     Set<String>  getEntityTypeNames(AtlasVertex vertex) {
         return getTypeNamesFromEdges(vertex, AtlasGraphUtilsV2.ENTITYTYPE_EDGE_LABEL);
+    }
+
+    String getTenant(AtlasVertex vertex) {
+        System.out.println(vertex);
+        return vertex.getProperty("__tenant", String.class);
     }
 
     /**
