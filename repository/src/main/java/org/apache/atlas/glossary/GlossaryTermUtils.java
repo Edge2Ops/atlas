@@ -807,10 +807,14 @@ public class GlossaryTermUtils extends GlossaryUtils {
                 AtlasVertex vertex      = null;
                 String      dataArray[] = data.split(FileUtils.ESCAPE_CHARACTER + FileUtils.COLON_CHARACTER);
 
-                if ((dataArray.length % 2) == 0) {
+                if (dataArray.length == 1) {
+                    vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME,
+                            GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[0] + invalidNameChars[0] + glossaryName);
+                } else if ((dataArray.length % 2) == 0) {
                     vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME,
                             GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[1] + invalidNameChars[0] + dataArray[0]);
-                } else {
+                }
+                else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Category does not exist : " +termName);
                 }
 
