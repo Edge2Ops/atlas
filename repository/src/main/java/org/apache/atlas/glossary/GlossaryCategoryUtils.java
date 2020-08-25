@@ -588,6 +588,13 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
         List<AtlasGlossaryCategory> glossaryCategories = new ArrayList<>();
         Map<String, String> glossaryNameCache = new HashMap<>();
 
+        HashSet<String[]> rowSet = new HashSet<>();
+        for (String[] record : fileData) {
+            if (rowSet.add(record) == false) {
+                throw new AtlasBaseException(AtlasErrorCode.UPLOADED_FILE_HAS_DUPLICATES);
+            }
+        }
+
         for (String[] record : fileData) {
             AtlasGlossaryCategory glossaryCategory = new AtlasGlossaryCategory();
 

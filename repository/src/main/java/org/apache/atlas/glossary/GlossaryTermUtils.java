@@ -530,6 +530,13 @@ public class GlossaryTermUtils extends GlossaryUtils {
         List<AtlasGlossaryTerm> glossaryTerms     = new ArrayList<>();
         Map<String, String>     glossaryNameCache = new HashMap<>();
 
+        HashSet<String[]> rowSet = new HashSet<>();
+        for (String[] record : fileData) {
+            if (rowSet.add(record) == false) {
+                throw new AtlasBaseException(AtlasErrorCode.UPLOADED_FILE_HAS_DUPLICATES);
+            }
+        }
+
         for (String[] record : fileData) {
             AtlasGlossaryTerm glossaryTerm = new AtlasGlossaryTerm();
 
@@ -581,6 +588,13 @@ public class GlossaryTermUtils extends GlossaryUtils {
     protected List<AtlasGlossaryTerm> getGlossaryTermEntitiesDataList(List<String[]> fileData, List<String> failedTermMsgs) throws AtlasBaseException {
         List<AtlasGlossaryTerm> glossaryTerms     = new ArrayList<>();
         Map<String, String>     glossaryNameCache = new HashMap<>();
+
+        HashSet<String[]> rowSet = new HashSet<>();
+        for (String[] record : fileData) {
+            if (rowSet.add(record) == false) {
+                throw new AtlasBaseException(AtlasErrorCode.UPLOADED_FILE_HAS_DUPLICATES);
+            }
+        }
 
         for (String[] record : fileData) {
             AtlasGlossaryTerm glossaryTerm = new AtlasGlossaryTerm();
