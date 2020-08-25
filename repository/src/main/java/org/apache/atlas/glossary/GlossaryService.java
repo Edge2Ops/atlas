@@ -460,7 +460,7 @@ public class GlossaryService {
 
         Set<AtlasRelatedObjectId> assignedEntities = storeObject.getAssignedEntities();
 
-        if (assignedEntities.size() > 0) {
+        if (assignedEntities != null && assignedEntities.size() > 0) {
             List<AtlasRelatedObjectId> assignedEntitiesList = new ArrayList<>(assignedEntities);
             removeTermFromEntities(termGuid, assignedEntitiesList);
         }
