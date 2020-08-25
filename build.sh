@@ -24,12 +24,12 @@ echo "Configuring aws default profile..."
 
 aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile awsdeploy
 aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile awsdeploy
-aws configure set region eu-west-1 --profile awsdeploy
+aws configure set region ap-south-1 --profile awsdeploy
 
 
 mkdir ~/.m2
 
-wget https://atlan-public.s3-eu-west-1.amazonaws.com/artifact/mavel_local.zip
+wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/mavel_local.zip
 unzip mavel_local.zip -d ~/.m2
 
 
@@ -40,4 +40,4 @@ echo "Maven Building"
 mvn clean -DskipTests package -Pdist
 
 echo "Sending build to s3"
-aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-public/atlas/
+aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-build-artifacts/atlas/
