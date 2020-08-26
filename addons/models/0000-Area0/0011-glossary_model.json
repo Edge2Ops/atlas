@@ -355,6 +355,19 @@
           "valuesMaxCount": 1,
           "isUnique": false,
           "isIndexable": true
+        },
+        {
+          "name": "botInfo",
+          "typeName": "map<string,string>",
+          "isOptional": true,
+          "cardinality": "SINGLE",
+          "valuesMinCount": 0,
+          "valuesMaxCount": 1,
+          "isUnique": false,
+          "isIndexable": true,
+          "includeInNotification": false,
+          "description": "Identifier to check if relationship was suggested or created by bot",
+          "searchWeight": -1
         }
       ],
       "relationshipCategory": "ASSOCIATION",
