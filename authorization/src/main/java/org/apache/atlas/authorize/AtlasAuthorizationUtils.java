@@ -19,6 +19,8 @@
 
 package org.apache.atlas.authorize;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.atlas.AtlasErrorCode;
 import org.apache.atlas.RequestContext;
 import org.apache.atlas.exception.AtlasBaseException;
@@ -33,10 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 
 public class AtlasAuthorizationUtils {
     private static final Logger LOG = LoggerFactory.getLogger(AtlasAuthorizationUtils.class);
@@ -231,12 +230,25 @@ public class AtlasAuthorizationUtils {
     public static String getCurrentUserName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        try {
-            System.out.println("authentication details");
-            System.out.println(auth.getDetails());
-        } catch (Exception e) {
+        if (auth == null) {
+            return "";
         }
 
+        String realm = "";
+        try {
+            ObjectMapper m = new ObjectMapper();
+            m.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+            Map<String,Object> principal = m.convertValue(auth.getPrincipal(), Map.class);
+            Map<String,Object> context = m.convertValue(principal.get("keycloakSecurityContext"), Map.class);
+            Map<String,Object> deployment = m.convertValue(context.get("deployment"), Map.class);
+            realm = (String) deployment.get("realm");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+        if (realm != "") {
+            return auth != null ? realm + "_" + auth.getName() : "";
+        }
         return auth != null ? auth.getName() : "";
     }
 
