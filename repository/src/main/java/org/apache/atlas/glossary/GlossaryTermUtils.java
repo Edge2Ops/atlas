@@ -530,6 +530,16 @@ public class GlossaryTermUtils extends GlossaryUtils {
         List<AtlasGlossaryTerm> glossaryTerms     = new ArrayList<>();
         Map<String, String>     glossaryNameCache = new HashMap<>();
 
+        Map<String, String[]> entryMap = new HashMap<>();
+        for (String[] record : fileData) {
+            String key = String.join(",", record);
+            if (entryMap.get(key) != null) {
+                throw new AtlasBaseException(AtlasErrorCode.UPLOADED_FILE_HAS_DUPLICATES);
+            } else {
+                entryMap.put(key, record);
+            }
+        }
+
         for (String[] record : fileData) {
             AtlasGlossaryTerm glossaryTerm = new AtlasGlossaryTerm();
 
@@ -581,6 +591,16 @@ public class GlossaryTermUtils extends GlossaryUtils {
     protected List<AtlasGlossaryTerm> getGlossaryTermEntitiesDataList(List<String[]> fileData, List<String> failedTermMsgs) throws AtlasBaseException {
         List<AtlasGlossaryTerm> glossaryTerms     = new ArrayList<>();
         Map<String, String>     glossaryNameCache = new HashMap<>();
+
+        Map<String, String[]> entryMap = new HashMap<>();
+        for (String[] record : fileData) {
+            String key = String.join(",", record);
+            if (entryMap.get(key) != null) {
+                throw new AtlasBaseException(AtlasErrorCode.UPLOADED_FILE_HAS_DUPLICATES);
+            } else {
+                entryMap.put(key, record);
+            }
+        }
 
         for (String[] record : fileData) {
             AtlasGlossaryTerm glossaryTerm = new AtlasGlossaryTerm();
@@ -807,10 +827,14 @@ public class GlossaryTermUtils extends GlossaryUtils {
                 AtlasVertex vertex      = null;
                 String      dataArray[] = data.split(FileUtils.ESCAPE_CHARACTER + FileUtils.COLON_CHARACTER);
 
-                if ((dataArray.length % 2) == 0) {
+                if (dataArray.length == 1) {
+                    vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME,
+                            GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[0] + invalidNameChars[0] + glossaryName);
+                } else if ((dataArray.length % 2) == 0) {
                     vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME,
                             GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[1] + invalidNameChars[0] + dataArray[0]);
-                } else {
+                }
+                else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Category does not exist : " +termName);
                 }
 
