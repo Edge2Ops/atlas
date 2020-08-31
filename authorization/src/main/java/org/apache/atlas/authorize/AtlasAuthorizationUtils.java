@@ -247,7 +247,7 @@ public class AtlasAuthorizationUtils {
         }
 
         // If realm exists, the token is not of a service account, prepend realm.
-        if (realm != "" && auth != null && auth.getName().startsWith("service-account-")) {
+        if (realm != "" && auth != null && !auth.getName().startsWith("service-account-")) {
             return auth != null ? realm + "_" + auth.getName() : "";
         }
         return auth != null ? auth.getName() : "";
