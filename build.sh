@@ -29,8 +29,8 @@ aws configure set region ap-south-1 --profile awsdeploy
 
 mkdir ~/.m2
 
-wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/mavel_local.zip
-unzip mavel_local.zip -d ~/.m2
+wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/maven_local_repository.zip
+unzip maven_local_repository.zip -d ~/.m2
 
 
 echo "printing aws profiles..."
