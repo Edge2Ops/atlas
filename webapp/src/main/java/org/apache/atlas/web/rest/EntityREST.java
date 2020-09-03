@@ -726,7 +726,6 @@ public class EntityREST {
     @GET
     @Path("/bulk")
     public AtlasEntitiesWithExtInfo getByGuids(@QueryParam("guid") List<String> guids, @QueryParam("minExtInfo") @DefaultValue("false") boolean minExtInfo, @QueryParam("ignoreRelationships") @DefaultValue("false") boolean ignoreRelationships, @QueryParam("ignoreNotFound") @DefaultValue("false") boolean ignoreNotFound) throws AtlasBaseException {
-        System.out.println("BULK GET BY GUIDS CALLED BABBAYY!");
         if (CollectionUtils.isNotEmpty(guids)) {
             for (String guid : guids) {
                 Servlets.validateQueryParamLength("guid", guid);
