@@ -20,6 +20,7 @@ package org.apache.atlas.repository.store.graph;
 import org.apache.atlas.AtlasErrorCode;
 import org.apache.atlas.GraphTransactionInterceptor;
 import org.apache.atlas.annotation.GraphTransaction;
+import org.apache.atlas.authorize.AtlasAuthorizationUtils;
 import org.apache.atlas.exception.AtlasBaseException;
 import org.apache.atlas.listener.ChangedTypeDefs;
 import org.apache.atlas.listener.TypeDefChangeListener;
@@ -700,7 +701,11 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
 
         for(AtlasClassificationType classificationType : typeRegistry.getAllClassificationTypes()) {
             if (searchPredicates.evaluate(classificationType)) {
-                typesDef.getClassificationDefs().add(classificationType.getClassificationDef());
+                String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+                AtlasClassificationDef classificationDef = classificationType.getClassificationDef();
+                if (userRealm != "" && userRealm.equals(classificationDef.getTenant())) {
+                    typesDef.getClassificationDefs().add(classificationDef);
+                }
             }
         }
 

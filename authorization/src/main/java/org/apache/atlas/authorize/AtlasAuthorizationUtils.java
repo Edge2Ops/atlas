@@ -253,6 +253,32 @@ public class AtlasAuthorizationUtils {
         return auth != null ? auth.getName() : "";
     }
 
+    public static String getCurrentUserRealm() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null) {
+            return "";
+        }
+
+        String realm = "";
+        try {
+            ObjectMapper m = new ObjectMapper();
+            m.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+            Map<String,Object> principal = m.convertValue(auth.getPrincipal(), Map.class);
+            Map<String,Object> context = m.convertValue(principal.get("keycloakSecurityContext"), Map.class);
+            Map<String,Object> deployment = m.convertValue(context.get("deployment"), Map.class);
+            realm = (String) deployment.get("realm");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+        // If realm exists, the token is not of a service account, prepend realm.
+        if (realm != "" && auth != null && !auth.getName().startsWith("service-account-")) {
+            return realm;
+        }
+        return "";
+    }
+
     public static Set<String> getCurrentUserGroups() {
         Set<String> ret = new HashSet<>();
 

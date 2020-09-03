@@ -66,6 +66,11 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         validateType(classificationDef);
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (userRealm != "") {
+            classificationDef.setTenant(userRealm);
+        }
+
         AtlasType type = typeRegistry.getType(classificationDef.getName());
 
         if (type.getTypeCategory() != org.apache.atlas.model.TypeCategory.CLASSIFICATION) {
@@ -99,6 +104,11 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         AtlasVertex vertex = (preCreateResult == null) ? preCreate(classificationDef) : preCreateResult;
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (userRealm != "") {
+            classificationDef.setTenant(userRealm);
+        }
+
         updateVertexAddReferences(classificationDef, vertex);
 
         AtlasClassificationDef ret = toClassificationDef(vertex);
@@ -118,9 +128,17 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         List<AtlasClassificationDef> ret = new ArrayList<>();
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
         Iterator<AtlasVertex> vertices = typeDefStore.findTypeVerticesByCategory(TypeCategory.TRAIT);
         while (vertices.hasNext()) {
-            ret.add(toClassificationDef(vertices.next()));
+            AtlasVertex vertex = vertices.next();
+            System.out.println(vertex);
+            if (userRealm == "") {
+                ret.add(toClassificationDef(vertex));
+            } else if (userRealm != "" && userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
+                ret.add(toClassificationDef(vertex));
+            }
         }
 
         if (LOG.isDebugEnabled()) {
@@ -138,6 +156,11 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         AtlasVertex vertex = typeDefStore.findTypeVertexByNameAndCategory(name, TypeCategory.TRAIT);
 
         if (vertex == null) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, name);
+        }
+
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (userRealm != "" && !userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, name);
         }
 
@@ -164,6 +187,12 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
             throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, guid);
         }
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
+        if (userRealm != "" && !userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, guid);
+        }
+
         AtlasClassificationDef ret = toClassificationDef(vertex);
 
         if (LOG.isDebugEnabled()) {
@@ -180,6 +209,12 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         }
 
         validateType(classifiDef);
+
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
+        if (userRealm != "" && !userRealm.equals(classifiDef.getTenant())) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, classifiDef.getGuid());
+        }
 
         AtlasClassificationDef ret = StringUtils.isNotBlank(classifiDef.getGuid())
                   ? updateByGuid(classifiDef.getGuid(), classifiDef) : updateByName(classifiDef.getName(), classifiDef);
@@ -199,6 +234,12 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         }
 
         AtlasClassificationDef existingDef   = typeRegistry.getClassificationDefByName(name);
+
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
+        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, existingDef.getName());
+        }
 
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_UPDATE, existingDef), "update classification-def ", name);
 
@@ -236,6 +277,12 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         AtlasClassificationDef existingDef   = typeRegistry.getClassificationDefByGuid(guid);
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
+        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, existingDef.getGuid());
+        }
+
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_UPDATE, existingDef), "update classification-def ", (existingDef != null ? existingDef.getName() : guid));
 
         validateType(classificationDef);
@@ -272,6 +319,13 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         AtlasClassificationDef existingDef = typeRegistry.getClassificationDefByName(name);
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
+        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, existingDef.getName());
+        }
+
+
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_DELETE, existingDef), "delete classification-def ", name);
 
         AtlasVertex ret = typeDefStore.findTypeVertexByNameAndCategory(name, TypeCategory.TRAIT);
@@ -300,6 +354,12 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         }
 
         AtlasClassificationDef existingDef = typeRegistry.getClassificationDefByGuid(guid);
+
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
+        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
+            throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, existingDef.getGuid());
+        }
 
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_DELETE, existingDef), "delete classification-def ", (existingDef != null ? existingDef.getName() : guid));
 
