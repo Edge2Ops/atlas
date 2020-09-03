@@ -61,6 +61,8 @@ public class AtlasClassificationDef extends AtlasStructDef implements java.io.Se
 
     private String tenant;
 
+    private String displayName;
+
 
     public AtlasClassificationDef() {
         this(null, null, null, null, null, null);
@@ -108,6 +110,7 @@ public class AtlasClassificationDef extends AtlasStructDef implements java.io.Se
 
         setSuperTypes(other != null ? other.getSuperTypes() : null);
         setTenant(other.getTenant());
+        setDisplayName(other.getDisplayName());
     }
 
     public String getTenant() {
@@ -117,6 +120,10 @@ public class AtlasClassificationDef extends AtlasStructDef implements java.io.Se
     public void setTenant(String tenant) {
         this.tenant = tenant;
     }
+
+    public String getDisplayName() { return displayName; }
+
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 
     public Set<String> getSuperTypes() {
         return superTypes;
@@ -249,6 +256,8 @@ public class AtlasClassificationDef extends AtlasStructDef implements java.io.Se
         sb.append("]");
         sb.append(", tenant=");
         sb.append(tenant);
+        sb.append(", displayName=");
+        sb.append(displayName);
         sb.append('}');
 
         return sb;

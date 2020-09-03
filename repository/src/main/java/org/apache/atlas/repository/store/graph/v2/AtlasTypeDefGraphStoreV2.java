@@ -470,6 +470,10 @@ public class AtlasTypeDefGraphStoreV2 extends AtlasTypeDefGraphStore {
         return vertex.getProperty("__tenant", String.class);
     }
 
+    String getDisplayName(AtlasVertex vertex) {
+        return vertex.getProperty("__displayName", String.class);
+    }
+
     /**
      * Get the typename properties from the edges, that are associated with the vertex and have the supplied edge label.
      * @param vertex
