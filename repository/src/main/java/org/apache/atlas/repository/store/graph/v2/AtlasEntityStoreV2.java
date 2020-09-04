@@ -121,7 +121,6 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
     @Override
     @GraphTransaction
     public List<String> getEntityGUIDS(final String typename) throws AtlasBaseException {
-        System.out.println("GET BY GUID CALLED !!!!");
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getEntityGUIDS({})", typename);
         }
