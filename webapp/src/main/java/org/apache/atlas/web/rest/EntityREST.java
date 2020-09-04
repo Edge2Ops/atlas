@@ -725,7 +725,7 @@ public class EntityREST {
      */
     @GET
     @Path("/bulk")
-    public AtlasEntitiesWithExtInfo getByGuids(@QueryParam("guid") List<String> guids, @QueryParam("minExtInfo") @DefaultValue("false") boolean minExtInfo, @QueryParam("ignoreRelationships") @DefaultValue("false") boolean ignoreRelationships) throws AtlasBaseException {
+    public AtlasEntitiesWithExtInfo getByGuids(@QueryParam("guid") List<String> guids, @QueryParam("minExtInfo") @DefaultValue("false") boolean minExtInfo, @QueryParam("ignoreRelationships") @DefaultValue("false") boolean ignoreRelationships, @QueryParam("ignoreNotFound") @DefaultValue("false") boolean ignoreNotFound) throws AtlasBaseException {
         if (CollectionUtils.isNotEmpty(guids)) {
             for (String guid : guids) {
                 Servlets.validateQueryParamLength("guid", guid);
@@ -743,7 +743,7 @@ public class EntityREST {
                 throw new AtlasBaseException(AtlasErrorCode.INSTANCE_GUID_NOT_FOUND, guids);
             }
 
-            return entitiesStore.getByIds(guids, minExtInfo, ignoreRelationships);
+            return entitiesStore.getByIds(guids, minExtInfo, ignoreRelationships, ignoreNotFound);
         } finally {
             AtlasPerfTracer.log(perf);
         }
@@ -754,7 +754,7 @@ public class EntityREST {
      */
     @GET
     @Path("/bulk/headers/optimized")
-    public List<AtlasEntityHeader> getHeadersByGuids(@QueryParam("guid") List<String> guids) throws AtlasBaseException {
+    public List<AtlasEntityHeader> getHeadersByGuids(@QueryParam("guid") List<String> guids, @QueryParam("ignoreNotFound") @DefaultValue("false") boolean ignoreNotFound) throws AtlasBaseException {
         if (CollectionUtils.isNotEmpty(guids)) {
             for (String guid : guids) {
                 Servlets.validateQueryParamLength("guid", guid);
@@ -772,7 +772,7 @@ public class EntityREST {
                 throw new AtlasBaseException(AtlasErrorCode.INSTANCE_GUID_NOT_FOUND, guids);
             }
 
-            return entitiesStore.getHeadersById(guids);
+            return entitiesStore.getHeadersById(guids,ignoreNotFound);
         } finally {
             AtlasPerfTracer.log(perf);
         }
