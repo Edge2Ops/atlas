@@ -669,7 +669,7 @@
         <calcite.version>1.16.0</calcite.version>
         <zookeeper.version>3.4.6</zookeeper.version>
         <falcon.version>0.8</falcon.version>
-        <sqoop.version>1.4.6</sqoop.version>
+        <sqoop.version>1.4.6.2.3.99.0-195</sqoop.version>
         <storm.version>1.2.0</storm.version>
         <curator.version>4.0.1</curator.version>
         <elasticsearch.version>7.6.2</elasticsearch.version>
