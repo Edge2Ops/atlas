@@ -141,6 +141,11 @@ public class GlossaryService {
             throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "Glossary definition missing");
         }
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (!userRealm.isEmpty()) {
+            atlasGlossary.setTenant(userRealm);
+        }
+
         if (StringUtils.isEmpty(atlasGlossary.getQualifiedName())) {
             if (StringUtils.isEmpty(atlasGlossary.getName())) {
                 throw new AtlasBaseException(AtlasErrorCode.GLOSSARY_QUALIFIED_NAME_CANT_BE_DERIVED);
@@ -339,13 +344,18 @@ public class GlossaryService {
             throw new AtlasBaseException(AtlasErrorCode.GLOSSARY_TERM_QUALIFIED_NAME_CANT_BE_DERIVED);
         }
 
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (!userRealm.isEmpty()) {
+            glossaryTerm.setTenant(userRealm);
+        }
+
         if (isNameInvalid(glossaryTerm.getName())) {
             throw new AtlasBaseException(AtlasErrorCode.INVALID_DISPLAY_NAME);
         } else {
             // Derive the qualifiedName
             String anchorGlossaryGuid = glossaryTerm.getAnchor().getGlossaryGuid();
             AtlasGlossary glossary = dataAccess.load(getGlossarySkeleton(anchorGlossaryGuid));
-            glossaryTerm.setQualifiedName(glossaryTerm.getTenant() + "/" + glossaryTerm.getName() + "@" + glossary.getQualifiedName());
+            glossaryTerm.setQualifiedName(glossaryTerm.getTenant() + ":" + glossaryTerm.getName() + "@" + glossary.getQualifiedName());
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Derived qualifiedName = {}", glossaryTerm.getQualifiedName());
@@ -554,6 +564,13 @@ public class GlossaryService {
         if (StringUtils.isEmpty(glossaryCategory.getName())) {
             throw new AtlasBaseException(AtlasErrorCode.GLOSSARY_CATEGORY_QUALIFIED_NAME_CANT_BE_DERIVED);
         }
+
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (!userRealm.isEmpty()) {
+            glossaryCategory.setTenant(userRealm);
+        }
+
+
         if (isNameInvalid(glossaryCategory.getName())) {
             throw new AtlasBaseException(AtlasErrorCode.INVALID_DISPLAY_NAME);
         } else {
