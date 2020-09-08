@@ -378,20 +378,38 @@ public class EntityGraphRetriever {
         return ret;
     }
 
-    public AtlasEntitiesWithExtInfo toAtlasEntitiesWithExtInfo(List<String> guids, boolean isMinExtInfo) throws AtlasBaseException {
+
+    private AtlasEntitiesWithExtInfo getAtlasEntitiesWithExtInfo(List<String> guids, boolean isMinExtInfo, boolean ignoreNotFoundException) throws AtlasBaseException {
         AtlasEntitiesWithExtInfo ret = new AtlasEntitiesWithExtInfo();
 
         for (String guid : guids) {
-            AtlasVertex vertex = getEntityVertex(guid);
+            try {
+                AtlasVertex vertex = getEntityVertex(guid);
 
-            AtlasEntity entity = mapVertexToAtlasEntity(vertex, ret, isMinExtInfo);
+                AtlasEntity entity = mapVertexToAtlasEntity(vertex, ret, isMinExtInfo);
 
-            ret.addEntity(entity);
+                ret.addEntity(entity);
+            } catch (AtlasBaseException e) {
+                if (e.getAtlasErrorCode().name().equals(new String("INSTANCE_GUID_NOT_FOUND")) && ignoreNotFoundException) {
+                    continue;
+                } else {
+                    throw e;
+                }
+            }
         }
 
         ret.compact();
 
         return ret;
+    }
+
+
+    public AtlasEntitiesWithExtInfo toAtlasEntitiesWithExtInfo(List<String> guids, boolean isMinExtInfo) throws AtlasBaseException {
+        return getAtlasEntitiesWithExtInfo(guids, isMinExtInfo, false);
+    }
+
+    public AtlasEntitiesWithExtInfo toAtlasEntitiesWithExtInfo(List<String> guids, boolean isMinExtInfo, boolean ignoreNotFoundException) throws AtlasBaseException {
+        return getAtlasEntitiesWithExtInfo(guids, isMinExtInfo, ignoreNotFoundException);
     }
 
     public Map<String, Object> getEntityUniqueAttribute(AtlasVertex entityVertex) throws AtlasBaseException {

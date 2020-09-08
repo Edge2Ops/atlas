@@ -195,6 +195,10 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
     @Override
     @GraphTransaction
     public List<AtlasEntityHeader> getHeadersById(final List<String> guids) throws AtlasBaseException {
+        return getHeadersById(guids, false);
+    }
+
+    public List<AtlasEntityHeader> getHeadersById(final List<String> guids, boolean ignoreNotFoundException) throws AtlasBaseException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getHeaderById({})", guids);
         }
@@ -204,7 +208,17 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
         List<AtlasEntityHeader> ret = new ArrayList<>();
 
         for (String guid : guids) {
-            ret.add(entityRetriever.toAtlasEntityHeader(guid));
+            try {
+                AtlasEntityHeader header = entityRetriever.toAtlasEntityHeader(guid);
+                ret.add(entityRetriever.toAtlasEntityHeader(guid));
+            } catch (AtlasBaseException e) {
+                if (e.getAtlasErrorCode().name().equals(new String("INSTANCE_GUID_NOT_FOUND")) && ignoreNotFoundException) {
+                    continue;
+                } else {
+                    throw e;
+                }
+            }
+
 
             // Not verifying access here because this is used to show entity information in propagated classifications
             // and if the user doesn't have access to one entity, the complete request shouldn't fail.
@@ -229,19 +243,26 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
     @Override
     @GraphTransaction
     public AtlasEntitiesWithExtInfo getByIds(List<String> guids, boolean isMinExtInfo, boolean ignoreRelationships) throws AtlasBaseException {
+        return getByIds(guids,isMinExtInfo,ignoreRelationships,false);
+    }
+
+    @GraphTransaction
+    public AtlasEntitiesWithExtInfo getByIds(List<String> guids, boolean isMinExtInfo, boolean ignoreRelationships,boolean ignoreNotFoundException) throws AtlasBaseException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getByIds({}, {})", guids, isMinExtInfo);
         }
 
         EntityGraphRetriever entityRetriever = new EntityGraphRetriever(graph, typeRegistry, ignoreRelationships);
 
-        AtlasEntitiesWithExtInfo ret = entityRetriever.toAtlasEntitiesWithExtInfo(guids, isMinExtInfo);
+        AtlasEntitiesWithExtInfo ret = entityRetriever.toAtlasEntitiesWithExtInfo(guids, isMinExtInfo, ignoreNotFoundException);
 
         if(ret != null){
             for(String guid : guids){
                 AtlasEntity entity = ret.getEntity(guid);
 
-                AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.ENTITY_READ, new AtlasEntityHeader(entity)), "read entity: guid=", guid);
+                if (entity != null) {
+                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.ENTITY_READ, new AtlasEntityHeader(entity)), "read entity: guid=", guid);
+                }
             }
         }
 
@@ -251,6 +272,7 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
 
         return ret;
     }
+
 
     @Override
     @GraphTransaction

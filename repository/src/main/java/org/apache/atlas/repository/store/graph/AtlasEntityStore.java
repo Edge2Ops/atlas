@@ -95,6 +95,16 @@ public interface AtlasEntityStore {
     AtlasEntitiesWithExtInfo getByIds(List<String> guid, boolean isMinExtInfo, boolean ignoreRelationships) throws AtlasBaseException;
 
     /**
+     * Batch GET to retrieve entities by their ID
+     * @param guid
+     * @param isMinExtInfo
+     * @param ignoreNotFoundException
+     * @return
+     * @throws AtlasBaseException
+     */
+    AtlasEntitiesWithExtInfo getByIds(List<String> guid, boolean isMinExtInfo, boolean ignoreRelationships, boolean ignoreNotFoundException) throws AtlasBaseException;
+
+    /**
      * Batch GET to retrieve entities by their uniqueIds
      * @param entityType
      * @param uniqueAttributes
@@ -295,4 +305,6 @@ public interface AtlasEntityStore {
     BulkImportResponse bulkCreateOrUpdateBusinessAttributes(InputStream inputStream, String fileName) throws AtlasBaseException;
 
     List<AtlasEntityHeader> getHeadersById(List<String> guids) throws AtlasBaseException;
+
+    List<AtlasEntityHeader> getHeadersById(List<String> guids, boolean ignoreNotFoundException) throws AtlasBaseException;
 }

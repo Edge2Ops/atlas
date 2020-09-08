@@ -170,7 +170,7 @@ public enum AtlasErrorCode {
     INVALID_FILE_TYPE(400, "ATLAS-400-00-098", "The provided file type {0} is not supported."),
     INVALID_BUSINESS_ATTRIBUTES_IMPORT_DATA(400, "ATLAS-400-00-099","The uploaded file was not processed due to following errors : {0}"),
     ATTRIBUTE_NAME_INVALID_CHARS(400, "ATLAS-400-00-09A", "{0}: invalid name. Attribute names must begin with a letter followed by a sequence of letters, numbers, or '_' characters"),
-    UPLOADED_FILE_HAS_DUPLICATES(400, "ATLAS-400-00-09B", "{0}: The file you've uploaded has duplicate rows"),
+    UPLOADED_FILE_HAS_DUPLICATES(400, "ATLAS-400-00-09B", "The file you've uploaded has duplicate rows"),
 
     UNAUTHORIZED_ACCESS(403, "ATLAS-403-00-001", "{0} is not authorized to perform {1}"),
 

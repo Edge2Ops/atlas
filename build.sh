@@ -37,7 +37,7 @@ echo "printing aws profiles..."
 echo "$(<~/.aws/credentials )"
 
 echo "Maven Building"
-mvn clean -DskipTests package -Pdist
+mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests package -Pdist
 
 echo "Sending build to s3"
 aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-build-artifacts/multitenant/
