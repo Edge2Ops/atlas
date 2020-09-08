@@ -574,7 +574,7 @@ public class GlossaryService {
         if (isNameInvalid(glossaryCategory.getName())) {
             throw new AtlasBaseException(AtlasErrorCode.INVALID_DISPLAY_NAME);
         } else {
-            // Derive the qualifiedName
+            // Derive qualifiedName
             String anchorGlossaryGuid = glossaryCategory.getAnchor().getGlossaryGuid();
             AtlasGlossary glossary = dataAccess.load(getGlossarySkeleton(anchorGlossaryGuid));
             glossaryCategory.setQualifiedName(glossaryCategory.getTenant() + "/" + glossaryCategory.getName() + "@" + glossary.getQualifiedName());
