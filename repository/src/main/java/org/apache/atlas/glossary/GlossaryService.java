@@ -99,7 +99,15 @@ public class GlossaryService {
             LOG.debug("==> GlossaryService.getGlossaries({}, {}, {})", limit, offset, sortOrder);
         }
 
-        List<String> glossaryGuids = AtlasGraphUtilsV2.findEntityGUIDsByType(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, sortOrder);
+        List<String> glossaryGuids = new ArrayList<>();
+
+        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+        if (!userRealm.isEmpty()) {
+            glossaryGuids = AtlasGraphUtilsV2.findEntityGUIDsByTypeAndTenantProperty(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, sortOrder, "AtlasGlossary.tenant", userRealm);
+        } else {
+            glossaryGuids = AtlasGraphUtilsV2.findEntityGUIDsByType(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, sortOrder);
+        }
+
         PaginationHelper paginationHelper = new PaginationHelper<>(glossaryGuids, offset, limit);
 
         List<AtlasGlossary> ret;

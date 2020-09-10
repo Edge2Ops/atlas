@@ -549,6 +549,36 @@ public class AtlasGraphUtilsV2 {
         return ret;
     }
 
+    public static List<String> findEntityGUIDsByTypeAndTenantProperty(String typename, SortOrder sortOrder, String propertyName, String propertyValue) {
+        return findEntityGUIDsByTypeAndTenantProperty(getGraphInstance(), typename, sortOrder, propertyName, propertyValue);
+    }
+
+    public static List<String> findEntityGUIDsByTypeAndTenantProperty(AtlasGraph graph, String typename, SortOrder sortOrder, String propertyName, String propertyValue) {
+        AtlasGraphQuery query = graph.query()
+                .has(ENTITY_TYPE_PROPERTY_KEY, typename);
+        if (sortOrder != null) {
+            AtlasGraphQuery.SortOrder qrySortOrder = sortOrder == SortOrder.ASCENDING ? ASC : DESC;
+            query.orderBy(Constants.QUALIFIED_NAME, qrySortOrder);
+        }
+
+        Iterator<AtlasVertex> results = query.vertices().iterator();
+        ArrayList<String> ret = new ArrayList<>();
+
+        if (!results.hasNext()) {
+            return Collections.emptyList();
+        }
+
+        while (results.hasNext()) {
+            AtlasVertex result = results.next();
+            String tenant = result.getProperty(propertyName, String.class);
+            if (tenant.equals(propertyValue)) {
+                ret.add(getIdFromVertex(result));
+            }
+        }
+
+        return ret;
+    }
+
     public static List<String> findEntityGUIDsByType(AtlasGraph graph, String typename) {
         return findEntityGUIDsByType(graph, typename, null);
     }

@@ -51,6 +51,7 @@ public class AtlasGlossary extends AtlasGlossaryBaseObject {
         this.usage = other.usage;
         this.terms = other.terms;
         this.categories = other.categories;
+        this.tenant = other.tenant;
     }
 
     public String getLanguage() {
