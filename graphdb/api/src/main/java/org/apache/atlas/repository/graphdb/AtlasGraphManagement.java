@@ -161,6 +161,17 @@ public interface AtlasGraphManagement {
     String addMixedIndex(String vertexIndex, AtlasPropertyKey propertyKey, boolean isStringField);
 
     /**
+     * Adds a property key to the given index in the graph.
+     *
+     * @param vertexIndex
+     * @param propertyKey
+     * @param isStringField
+     * @param normalizer
+     * @return the index field name used for the given property
+     */
+    String addMixedIndex(String vertexIndex, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer);
+
+    /**
      * Gets the index field name for the vertex property.
      * @param indexName
      * @param propertyKey

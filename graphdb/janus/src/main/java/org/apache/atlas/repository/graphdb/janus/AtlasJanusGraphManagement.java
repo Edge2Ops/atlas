@@ -34,6 +34,7 @@ import org.apache.atlas.repository.graphdb.AtlasPropertyKey;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.graphdb.types.ParameterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,15 +194,24 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
     }
 
     @Override
-    public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField) {
+    public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer) {
         PropertyKey     janusKey        = AtlasJanusObjectFactory.createPropertyKey(propertyKey);
         JanusGraphIndex janusGraphIndex = management.getGraphIndex(indexName);
 
         if(isStringField) {
-            management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter());
+            if (normalizer == "" || normalizer == null) {
+                management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter());
+            } else {
+                management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter(),Parameter.of(ParameterType.customParameterName("normalizer"),normalizer));
+            }
+
             LOG.debug("created a string type for {} with janueKey {}.", propertyKey.getName(), janusKey);
         } else {
-            management.addIndexKey(janusGraphIndex, janusKey);
+            if (normalizer == "" || normalizer == null) {
+                management.addIndexKey(janusGraphIndex, janusKey);
+            } else {
+                management.addIndexKey(janusGraphIndex, janusKey,Parameter.of(ParameterType.customParameterName("normalizer"),normalizer));
+            }
             LOG.debug("created a default type for {} with janueKey {}.", propertyKey.getName(), janusKey);
         }
 
@@ -216,6 +226,11 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
         LOG.info("property '{}' is encoded to '{}'.", propertyKey.getName(), encodedName);
 
         return encodedName;
+    }
+
+    @Override
+    public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField) {
+        return addMixedIndex(indexName, propertyKey,isStringField,"");
     }
 
     @Override

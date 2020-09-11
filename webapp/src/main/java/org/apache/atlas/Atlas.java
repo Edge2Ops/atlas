@@ -18,6 +18,9 @@
 
 package org.apache.atlas;
 
+import io.vavr.collection.List;
+import org.apache.atlas.repository.Constants;
+import org.apache.atlas.repository.graphdb.janus.AtlasElasticsearchDatabase;
 import org.apache.atlas.security.SecurityProperties;
 import org.apache.atlas.web.service.EmbeddedServer;
 import org.apache.commons.cli.CommandLine;
@@ -29,6 +32,17 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
+import org.apache.tinkerpop.shaded.minlog.Log;
+import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.*;
+import org.elasticsearch.common.settings.Setting;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -37,7 +51,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Driver for running Metadata as a standalone server with embedded jetty server.
@@ -127,10 +143,54 @@ public final class Atlas {
 
         showStartupInfo(buildConfiguration, enableTLS, appPort);
 
+        if (configuration.getProperty("atlas.graph.index.search.backend").equals("elasticsearch")) {
+            initElasticSearch();
+        }
+
+        //Initialize elastic search
+
         server = EmbeddedServer.newServer(appHost, appPort, appPath, enableTLS);
         installLogBridge();
 
         server.start();
+    }
+
+    /*
+        This function is to initialize elastic search for custom normalizers or custom analyzers
+     */
+    private static void initElasticSearch() {
+        LOG.info("Initliazing elastic search for custom normalizers");
+        RestHighLevelClient esClient = AtlasElasticsearchDatabase.getClient();
+        GetIndexTemplatesRequest request = new GetIndexTemplatesRequest("atlan_template");
+        try {
+            GetIndexTemplatesResponse getTemplateResponse = esClient.indices().getIndexTemplate(request, RequestOptions.DEFAULT);
+            LOG.info("Got get template response");
+            if (getTemplateResponse.getIndexTemplates().size() != 0) {
+                LOG.info("Atlan Index Template already present!");
+            }
+        } catch (ElasticsearchStatusException e) {
+            if (e.status().getStatus() == 404) {
+                LOG.info("Index template not present. Creating...");
+                PutIndexTemplateRequest indexTemplateRequest = new PutIndexTemplateRequest("atlan_template");
+                indexTemplateRequest.source("{\r\n  \"index_patterns\": [\"*janusgraph*\"],\r\n  \"settings\": {\r\n    \"analysis\": {\r\n      \"normalizer\": {\r\n        \"lowerasciinormalizer\": {\r\n          \"type\": \"custom\",\r\n          \"filter\":  [ \"lowercase\", \"asciifolding\" ]\r\n        }\r\n      }\r\n    }\r\n  }\r\n}", XContentType.JSON);
+
+                try {
+                    AcknowledgedResponse putTemplateResponse = esClient.indices().putTemplate(indexTemplateRequest, RequestOptions.DEFAULT);
+                    if (putTemplateResponse.isAcknowledged()) {
+                        LOG.info("Atlan index template created.");
+                    } else {
+                        LOG.error("error creating atlan index template");
+                    }
+                } catch (Exception es) {
+                    LOG.error("Caught exception: ",es.toString());
+                }
+
+            } else {
+                LOG.error("Error fetching index template");
+            }
+        } catch (Exception e) {
+            LOG.error("Caught exception: ",e.toString());
+        }
     }
 
     private static void setApplicationHome() {

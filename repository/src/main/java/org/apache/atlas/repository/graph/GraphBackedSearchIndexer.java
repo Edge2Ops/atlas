@@ -571,7 +571,14 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
                         isStringField = AtlasAttributeDef.IndexType.STRING.equals(indexType);
 
                     }
-                    createVertexIndex(management, propertyName, UniqueKind.NONE, getPrimitiveClass(attribTypeName), cardinality, isIndexable, false, isStringField);
+
+                    if (attributeDef.getNormalizer() == "") {
+                        createVertexIndex(management, propertyName, UniqueKind.NONE, getPrimitiveClass(attribTypeName), cardinality, isIndexable, false, isStringField);
+                    } else {
+                        createVertexIndex(management, propertyName, UniqueKind.NONE, getPrimitiveClass(attribTypeName), cardinality, isIndexable, false, isStringField,attributeDef.getNormalizer());
+                    }
+
+
 
                     if (uniqPropName != null) {
                         createVertexIndex(management, uniqPropName, UniqueKind.PER_TYPE_UNIQUE, getPrimitiveClass(attribTypeName), cardinality, isIndexable, true, isStringField);
@@ -729,6 +736,11 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
 
     public String createVertexIndex(AtlasGraphManagement management, String propertyName, UniqueKind uniqueKind, Class propertyClass,
                                   AtlasCardinality cardinality, boolean createCompositeIndex, boolean createCompositeIndexWithTypeAndSuperTypes, boolean isStringField) {
+        return createVertexIndex(management,propertyName,uniqueKind,propertyClass,cardinality,createCompositeIndex,createCompositeIndexWithTypeAndSuperTypes,isStringField,"");
+    }
+
+    public String createVertexIndex(AtlasGraphManagement management, String propertyName, UniqueKind uniqueKind, Class propertyClass,
+                                    AtlasCardinality cardinality, boolean createCompositeIndex, boolean createCompositeIndexWithTypeAndSuperTypes, boolean isStringField, String normalizer) {
         String indexFieldName = null;
 
         if (propertyName != null) {
@@ -742,12 +754,17 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
                         LOG.debug("Creating backing index for vertex property {} of type {} ", propertyName, propertyClass.getName());
                     }
 
-                    indexFieldName = management.addMixedIndex(VERTEX_INDEX, propertyKey, isStringField);
+                    if (normalizer == "") {
+                        indexFieldName = management.addMixedIndex(VERTEX_INDEX, propertyKey, isStringField);
+                    } else {
+                        indexFieldName = management.addMixedIndex(VERTEX_INDEX, propertyKey, isStringField, normalizer);
+                    }
+
+
                     LOG.info("Created backing index for vertex property {} of type {} ", propertyName, propertyClass.getName());
                 }
             }
-
-            if(indexFieldName == null && isIndexApplicable(propertyClass, cardinality)) {
+            if (indexFieldName == null && isIndexApplicable(propertyClass, cardinality)) {
                 indexFieldName = management.getIndexFieldName(VERTEX_INDEX, propertyKey, isStringField);
             }
 

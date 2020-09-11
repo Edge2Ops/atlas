@@ -282,11 +282,11 @@ public class ESIndexQueryBuilder {
             sourceBuilder.query(QueryBuilders.queryStringQuery(queryString));
         }
 
-        sourceBuilder.sort(new ScoreSortBuilder().order(SortOrder.DESC));
-
         if (StringUtils.isNotEmpty(sortBy)) {
             SortOrder order = sortOrder == org.apache.atlas.SortOrder.ASCENDING ? SortOrder.ASC : SortOrder.DESC;
             sourceBuilder.sort(new FieldSortBuilder(sortBy).order(order));
         }
+
+        sourceBuilder.sort(new ScoreSortBuilder().order(SortOrder.DESC));
     }
 }

@@ -267,6 +267,7 @@ public class AtlasStructDef extends AtlasBaseTypeDef implements Serializable {
         public static final String    INDEX_TYPE_ATTR_NAME                    = "indexType";
         public static final String    ATTRDEF_OPTION_SOFT_REFERENCE           = "isSoftReference";
         public static final String    ATTRDEF_OPTION_APPEND_ON_PARTIAL_UPDATE = "isAppendOnPartialUpdate";
+        public static final String    NORMALIZER_ATTR_NAME                    = "normalizer";
         private final String          STRING_TRUE                             = "true";
 
         /**
@@ -294,6 +295,7 @@ public class AtlasStructDef extends AtlasBaseTypeDef implements Serializable {
         private List<AtlasConstraintDef> constraints;
         private Map<String, String>      options;
         private String                   displayName;
+        private String normalizer;
 
         public AtlasAttributeDef() { this(null, null); }
 
@@ -375,6 +377,7 @@ public class AtlasStructDef extends AtlasBaseTypeDef implements Serializable {
                 setSearchWeight(other.getSearchWeight());
                 setIndexType(other.getIndexType());
                 setDisplayName(other.getDisplayName());
+                setNormalizer(other.getNormalizer());
             }
         }
 
@@ -398,8 +401,16 @@ public class AtlasStructDef extends AtlasBaseTypeDef implements Serializable {
             this.indexType = indexType;
         }
 
+        public void setNormalizer(String normalizer) {
+            this.normalizer = normalizer;
+        }
+
         public IndexType getIndexType() {
             return indexType;
+        }
+
+        public String getNormalizer() {
+            return normalizer;
         }
 
         public String getName() {
