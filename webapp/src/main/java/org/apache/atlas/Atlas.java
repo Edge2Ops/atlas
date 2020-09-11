@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -129,9 +129,9 @@ public final class Atlas {
 
         if (!isLocalAddress(InetAddress.getByName(appHost))) {
             String msg =
-                "Failed to start Atlas server. Address " + appHost
-                    + " does not belong to this host. Correct configuration parameter: "
-                    + SecurityProperties.BIND_ADDRESS;
+                    "Failed to start Atlas server. Address " + appHost
+                            + " does not belong to this host. Correct configuration parameter: "
+                            + SecurityProperties.BIND_ADDRESS;
             LOG.error(msg);
             throw new IOException(msg);
         }
@@ -182,14 +182,14 @@ public final class Atlas {
                         LOG.error("error creating atlan index template");
                     }
                 } catch (Exception es) {
-                    LOG.error("Caught exception: ",es.toString());
+                    LOG.error("Caught exception: ", es.toString());
                 }
 
             } else {
                 LOG.error("Error fetching index template");
             }
         } catch (Exception e) {
-            LOG.error("Caught exception: ",e.toString());
+            LOG.error("Caught exception: ", e.toString());
         }
     }
 
@@ -229,8 +229,8 @@ public final class Atlas {
 
         assert configuration != null;
         appPort = StringUtils.isEmpty(enableTLSFlag) || enableTLSFlag.equals("true") ?
-            configuration.getInt(ATLAS_SERVER_HTTPS_PORT, 21443) :
-            configuration.getInt(ATLAS_SERVER_HTTP_PORT, 21000);
+                configuration.getInt(ATLAS_SERVER_HTTPS_PORT, 21443) :
+                configuration.getInt(ATLAS_SERVER_HTTP_PORT, 21000);
         return appPort;
     }
 

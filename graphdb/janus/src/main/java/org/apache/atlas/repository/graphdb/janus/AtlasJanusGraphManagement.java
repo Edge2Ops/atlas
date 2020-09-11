@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,16 +48,16 @@ import java.util.Set;
 public class AtlasJanusGraphManagement implements AtlasGraphManagement {
     private static final Parameter[] STRING_PARAMETER_ARRAY = new Parameter[]{Mapping.STRING.asParameter()};
 
-    private static final Logger LOG            = LoggerFactory.getLogger(AtlasJanusGraphManagement.class);
-    private static final char[] RESERVED_CHARS = { '{', '}', '"', '$', Token.SEPARATOR_CHAR };
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasJanusGraphManagement.class);
+    private static final char[] RESERVED_CHARS = {'{', '}', '"', '$', Token.SEPARATOR_CHAR};
 
-    private AtlasJanusGraph      graph;
+    private AtlasJanusGraph graph;
     private JanusGraphManagement management;
-    private Set<String>          newMultProperties = new HashSet<>();
+    private Set<String> newMultProperties = new HashSet<>();
 
     public AtlasJanusGraphManagement(AtlasJanusGraph graph, JanusGraphManagement managementSystem) {
         this.management = managementSystem;
-        this.graph      = graph;
+        this.graph = graph;
     }
 
     @Override
@@ -92,8 +92,8 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
             edgeLabel = management.makeEdgeLabel(label).make();
         }
 
-        Direction     direction = AtlasJanusObjectFactory.createDirection(edgeDirection);
-        PropertyKey[] keys      = AtlasJanusObjectFactory.createPropertyKeys(propertyKeys);
+        Direction direction = AtlasJanusObjectFactory.createDirection(edgeDirection);
+        PropertyKey[] keys = AtlasJanusObjectFactory.createPropertyKeys(propertyKeys);
 
         if (management.getRelationIndex(edgeLabel, indexName) == null) {
             management.buildEdgeIndex(edgeLabel, indexName, direction, keys);
@@ -171,7 +171,7 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
 
         if (null == janusPropertyKey) return;
 
-        for (int i = 0;; i++) {
+        for (int i = 0; ; i++) {
             String deletedKeyName = janusPropertyKey + "_deleted_" + i;
 
             if (null == management.getPropertyKey(deletedKeyName)) {
@@ -195,14 +195,14 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
 
     @Override
     public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer) {
-        PropertyKey     janusKey        = AtlasJanusObjectFactory.createPropertyKey(propertyKey);
+        PropertyKey janusKey = AtlasJanusObjectFactory.createPropertyKey(propertyKey);
         JanusGraphIndex janusGraphIndex = management.getGraphIndex(indexName);
 
-        if(isStringField) {
+        if (isStringField) {
             if (normalizer == "" || normalizer == null) {
                 management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter());
             } else {
-                management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter(),Parameter.of(ParameterType.customParameterName("normalizer"),normalizer));
+                management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter(), Parameter.of(ParameterType.customParameterName("normalizer"), normalizer));
             }
 
             LOG.debug("created a string type for {} with janueKey {}.", propertyKey.getName(), janusKey);
@@ -210,13 +210,13 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
             if (normalizer == "" || normalizer == null) {
                 management.addIndexKey(janusGraphIndex, janusKey);
             } else {
-                management.addIndexKey(janusGraphIndex, janusKey,Parameter.of(ParameterType.customParameterName("normalizer"),normalizer));
+                management.addIndexKey(janusGraphIndex, janusKey, Parameter.of(ParameterType.customParameterName("normalizer"), normalizer));
             }
             LOG.debug("created a default type for {} with janueKey {}.", propertyKey.getName(), janusKey);
         }
 
         String encodedName = "";
-        if(isStringField) {
+        if (isStringField) {
             encodedName = graph.getIndexFieldName(propertyKey, janusGraphIndex, STRING_PARAMETER_ARRAY);
         } else {
             encodedName = graph.getIndexFieldName(propertyKey, janusGraphIndex);
@@ -230,14 +230,14 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
 
     @Override
     public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField) {
-        return addMixedIndex(indexName, propertyKey,isStringField,"");
+        return addMixedIndex(indexName, propertyKey, isStringField, "");
     }
 
     @Override
     public String getIndexFieldName(String indexName, AtlasPropertyKey propertyKey, boolean isStringField) {
         JanusGraphIndex janusGraphIndex = management.getGraphIndex(indexName);
 
-        if(isStringField) {
+        if (isStringField) {
             return graph.getIndexFieldName(propertyKey, janusGraphIndex, STRING_PARAMETER_ARRAY);
         } else {
             return graph.getIndexFieldName(propertyKey, janusGraphIndex);
