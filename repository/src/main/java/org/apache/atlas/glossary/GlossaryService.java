@@ -500,6 +500,25 @@ public class GlossaryService {
     }
 
     @GraphTransaction
+    public void assignTermToEntitiesBulk(List<AtlasGlossaryTerm> terms) throws AtlasBaseException {
+//        if (DEBUG_ENABLED) {
+//            LOG.debug("==> GlossaryService.assignTermToEntities({}, {})", termGuid, relatedObjectIds);
+//        }
+
+        for (AtlasGlossaryTerm term : terms) {
+            List<AtlasRelatedObjectId> relatedObjectIds = new ArrayList<>(term.getAssignedEntities());
+            AtlasGlossaryTerm glossaryTerm = dataAccess.load(getAtlasGlossaryTermSkeleton(term.getGuid()));
+            glossaryTermUtils.processTermAssignments(glossaryTerm, relatedObjectIds);
+            entityChangeNotifier.onTermAddedToEntities(glossaryTerm, relatedObjectIds);
+        }
+
+//        if (DEBUG_ENABLED) {
+//            LOG.debug("<== GlossaryService.assignTermToEntities()");
+//        }
+
+    }
+
+    @GraphTransaction
     public void removeTermFromEntities(String termGuid, List<AtlasRelatedObjectId> relatedObjectIds) throws AtlasBaseException {
         if (DEBUG_ENABLED) {
             LOG.debug("==> GlossaryService.removeTermFromEntities({}, {})", termGuid, relatedObjectIds);
@@ -1339,9 +1358,11 @@ public class GlossaryService {
             List<String> failedTermMsgs = new ArrayList<>();
 
             ret = glossaryTermUtils.getGlossaryTermEntitiesDataList(fileData, failedTermMsgs);
-            for (AtlasGlossaryTerm term : ret) {
-                assignTermToEntities(term.getGuid(), new ArrayList<>(term.getAssignedEntities()));
-            }
+            assignTermToEntitiesBulk(ret);
+            // TODO: Fix transaction, get rid of the line below
+            // This function call shouldn't be here. Without this, it doesn't write the last assignment to the database.
+            // Looks like some transaction magic I'm too tired to understand
+            assignTermToEntities(ret.get(0).getGuid(), new ArrayList<>(ret.get(0).getAssignedEntities()));
         } catch (IOException e) {
             throw new AtlasBaseException(AtlasErrorCode.FAILED_TO_UPLOAD, e);
         }
