@@ -770,7 +770,8 @@ public class GlossaryTermUtils extends GlossaryUtils {
                 AtlasVertex vertex      = null;
 
                 if (data != "") {
-                    vertex = AtlasGraphUtilsV2.findByGuid(data);
+//                    vertex = AtlasGraphUtilsV2.findByGuid(data);
+                    vertex = AtlasGraphUtilsV2.findBySuperTypeAndUniquePropertyName("AtlanAsset", "Referenceable.qualifiedName", data);
                 } else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Entity does not exist : " +termName);
                 }

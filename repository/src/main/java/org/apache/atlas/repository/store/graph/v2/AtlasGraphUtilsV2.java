@@ -473,6 +473,10 @@ public class AtlasGraphUtilsV2 {
         return vertex;
     }
 
+    public static AtlasVertex findBySuperTypeAndUniquePropertyName(String typeName, String propertyName, Object attrVal) {
+        return findBySuperTypeAndUniquePropertyName(getGraphInstance(), typeName, propertyName, attrVal);
+    }
+
     public static AtlasVertex findBySuperTypeAndUniquePropertyName(AtlasGraph graph, String typeName, String propertyName, Object attrVal) {
         MetricRecorder metric = RequestContext.get().startMetricRecord("findBySuperTypeAndUniquePropertyName");
 
