@@ -527,6 +527,7 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
         boolean isMapType = isMapType(attribTypeName);
         final String uniqPropName = isUnique ? AtlasGraphUtilsV2.encodePropertyKey(structDef.getName() + "." + UNIQUE_ATTRIBUTE_SHADE_PROPERTY_PREFIX + attributeDef.getName()) : null;
         final AtlasAttributeDef.IndexType indexType = attributeDef.getIndexType();
+        final String normalizer = attributeDef.getNormalizer();
 
         try {
             AtlasType atlasType = typeRegistry.getType(structDef.getName());
@@ -984,7 +985,7 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
         }
     }
 
-    private void updateIndexForTypeDef(AtlasGraphManagement management, AtlasBaseTypeDef typeDef) {
+    public void updateIndexForTypeDef(AtlasGraphManagement management, AtlasBaseTypeDef typeDef) {
         Preconditions.checkNotNull(typeDef, "Cannot index on null typedefs");
         if (LOG.isDebugEnabled()) {
             LOG.debug("Creating indexes for type name={}, definition={}", typeDef.getName(), typeDef.getClass());
