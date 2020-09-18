@@ -593,6 +593,7 @@ public class AtlasStructDef extends AtlasBaseTypeDef implements Serializable {
             sb.append(", options='").append(options).append('\'');
             sb.append(", searchWeight='").append(searchWeight).append('\'');
             sb.append(", indexType='").append(indexType).append('\'');
+            sb.append(", normalizer='").append(normalizer).append('\'');
             sb.append(", displayName='").append(displayName).append('\'');
             sb.append(", constraints=[");
             if (CollectionUtils.isNotEmpty(constraints)) {
