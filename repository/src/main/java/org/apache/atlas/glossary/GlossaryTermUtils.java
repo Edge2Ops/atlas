@@ -845,8 +845,13 @@ public class GlossaryTermUtils extends GlossaryUtils {
                     termCategoryHeader.setCategoryGuid(glossaryCategoryGuid);
                     ret.add(termCategoryHeader);
                 } else {
-                    failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
-                            dataArray[1] + FileUtils.COLON_CHARACTER + dataArray[0] + " for record with TermName  : " + termName + " and GlossaryName : " + glossaryName);
+                    if (dataArray.length == 1) {
+                        failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
+                                glossaryName + FileUtils.COLON_CHARACTER + dataArray[0] + " for record with TermName  : " + termName + " and GlossaryName : " + glossaryName);
+                    } else {
+                        failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
+                                dataArray[1] + FileUtils.COLON_CHARACTER + dataArray[0] + " for record with TermName  : " + termName + " and GlossaryName : " + glossaryName);
+                    }
                 }
             }
 
