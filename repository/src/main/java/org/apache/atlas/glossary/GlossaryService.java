@@ -48,6 +48,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.shaded.minlog.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -384,6 +385,35 @@ public class GlossaryService {
         List<AtlasGlossaryTerm> ret = new ArrayList<>();
         for (AtlasGlossaryTerm atlasGlossaryTerm : glossaryTerm) {
             ret.add(createTerm(atlasGlossaryTerm));
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== GlossaryService.createTerms() : {}", ret);
+        }
+
+        return ret;
+    }
+
+    @GraphTransaction
+    public List<AtlasGlossaryTerm> createTermsBulk(List<AtlasGlossaryTerm> glossaryTerm) throws AtlasBaseException {
+        if (DEBUG_ENABLED) {
+            LOG.debug("==> GlossaryService.create({})", glossaryTerm);
+        }
+
+        if (Objects.isNull(glossaryTerm)) {
+            throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "glossaryTerm(s) is null/empty");
+        }
+
+
+        List<AtlasGlossaryTerm> ret = new ArrayList<>();
+        for (AtlasGlossaryTerm atlasGlossaryTerm : glossaryTerm) {
+            try {
+                AtlasGlossaryTerm term = createTerm(atlasGlossaryTerm);
+                ret.add(term);
+                LOG.info("Successfully created term - " + atlasGlossaryTerm.getQualifiedName());
+            } catch (Exception e) {
+                LOG.info("Failed to create AtlasGlossaryTerm - " + atlasGlossaryTerm.getQualifiedName());
+            }
         }
 
         if (LOG.isDebugEnabled()) {
@@ -1371,15 +1401,15 @@ public class GlossaryService {
     }
 
     private List<AtlasGlossaryTerm> createGlossaryTerms(List<AtlasGlossaryTerm> glossaryTerms) throws AtlasBaseException {
-        List<AtlasGlossaryTerm> ret = new ArrayList<>();
+        List<AtlasGlossaryTerm> ret = createTermsBulk(glossaryTerms);
 
-        for (AtlasGlossaryTerm glossaryTerm : glossaryTerms) {
-            try {
-                ret.add(createTerm(glossaryTerm));
-            } catch (AtlasBaseException e) {
-                throw new AtlasBaseException(AtlasErrorCode.FAILED_TO_CREATE_GLOSSARY_TERM, e);
-            }
-        }
+//        for (AtlasGlossaryTerm glossaryTerm : glossaryTerms) {
+//            try {
+//                ret.add(createTerm(glossaryTerm));
+//            } catch (AtlasBaseException e) {
+//                throw new AtlasBaseException(AtlasErrorCode.FAILED_TO_CREATE_GLOSSARY_TERM, e);
+//            }
+//        }
 
         return ret;
     }

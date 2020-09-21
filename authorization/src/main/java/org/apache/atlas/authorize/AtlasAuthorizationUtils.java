@@ -133,8 +133,6 @@ public class AtlasAuthorizationUtils {
                 request.setForwardedAddresses(RequestContext.get().getForwardedAddresses());
                 request.setRemoteIPAddress(RequestContext.get().getClientIPAddress());
                 ret = authorizer.isAccessAllowed(request);
-
-                LOG.info(request.toString());
             } catch (AtlasAuthorizationException e) {
                 LOG.error("Unable to obtain AtlasAuthorizer", e);
             }
@@ -143,8 +141,6 @@ public class AtlasAuthorizationUtils {
         }
 
         RequestContext.get().endMetricRecord(metric);
-
-        LOG.info("Allowed: ", ret);
         return ret;
     }
 
