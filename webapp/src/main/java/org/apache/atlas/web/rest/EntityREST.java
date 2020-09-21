@@ -153,8 +153,9 @@ public class EntityREST {
 
             for (int i=0; i < entities.size(); i++) {
                 try {
-                    AtlasEntityWithExtInfo entity = entitiesStore.getById(entities.get(i).getEntityGuid(), true, true);
-                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entity.getEntity())));
+                    AtlasEntity entity = new AtlasEntity();
+                    entity.setGuid(entities.get(i).getEntityGuid());
+                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entity), false));
                     response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), true));
                 } catch (AtlasBaseException e) {
                     response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), false));
