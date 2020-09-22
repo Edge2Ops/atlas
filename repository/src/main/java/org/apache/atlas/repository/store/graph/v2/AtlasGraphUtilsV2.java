@@ -501,7 +501,6 @@ public class AtlasGraphUtilsV2 {
         MetricRecorder metric = RequestContext.get().startMetricRecord("findBySuperTypeAndUniquePropertyName");
 
         AtlasGraphTraversal query = (AtlasGraphTraversal) graph.V()
-                .has(Constants.SUPER_TYPES_PROPERTY_KEY, typeName)
                 .has(propertyName, attrVal).valueMap(Constants.GUID_PROPERTY_KEY).limit(1);
 
         List<Map<String, List<String>>> results = query.toList();
