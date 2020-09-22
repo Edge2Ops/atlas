@@ -768,15 +768,25 @@ public class GlossaryTermUtils extends GlossaryUtils {
 
             for (String data : csvRecordArray) {
                 String guid      = "";
-
+                AtlasVertex vertex = null;
                 if (data != "") {
+                    String[] dataArray = data.split(":");
+                    if (dataArray.length % 2 == 0) {
+                        vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(dataArray[0], "Referenceable.qualifiedName", dataArray[1]);
+                    } else {
 //                    vertex = AtlasGraphUtilsV2.findByGuid(data);
-                    guid = AtlasGraphUtilsV2.findGuidBySuperTypeAndUniquePropertyNameOptimized("AtlanAsset", "Referenceable.qualifiedName", data);
+                        guid = AtlasGraphUtilsV2.findGuidBySuperTypeAndUniquePropertyNameOptimized("Asset", "Referenceable.qualifiedName", data);
+                    }
                 } else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Entity does not exist : " +termName);
                 }
 
-                if (!guid.isEmpty()) {
+                if (vertex != null) {
+                    relatedObjectId       = new AtlasRelatedObjectId();
+                    String entityGuid = AtlasGraphUtilsV2.getIdFromVertex(vertex);
+                    relatedObjectId.setGuid(entityGuid);
+                    ret.add(relatedObjectId);
+                } else if (!guid.isEmpty()) {
                     relatedObjectId       = new AtlasRelatedObjectId();
                     relatedObjectId.setGuid(guid);
                     ret.add(relatedObjectId);
