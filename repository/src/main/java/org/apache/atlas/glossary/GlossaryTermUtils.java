@@ -767,19 +767,18 @@ public class GlossaryTermUtils extends GlossaryUtils {
             AtlasRelatedObjectId relatedObjectId;
 
             for (String data : csvRecordArray) {
-                AtlasVertex vertex      = null;
+                String guid      = "";
 
                 if (data != "") {
 //                    vertex = AtlasGraphUtilsV2.findByGuid(data);
-                    vertex = AtlasGraphUtilsV2.findBySuperTypeAndUniquePropertyName("AtlanAsset", "Referenceable.qualifiedName", data);
+                    guid = AtlasGraphUtilsV2.findGuidBySuperTypeAndUniquePropertyNameOptimized("AtlanAsset", "Referenceable.qualifiedName", data);
                 } else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Entity does not exist : " +termName);
                 }
 
-                if (vertex != null) {
-                    String entityGuid = AtlasGraphUtilsV2.getIdFromVertex(vertex);
+                if (!guid.isEmpty()) {
                     relatedObjectId       = new AtlasRelatedObjectId();
-                    relatedObjectId.setGuid(entityGuid);
+                    relatedObjectId.setGuid(guid);
                     ret.add(relatedObjectId);
                 } else {
                     failedTermMsgs.add("\n" + "The provided Reference Glossary and TermName does not exist in the system " +
