@@ -344,17 +344,17 @@ public class EntitySearchProcessor extends SearchProcessor {
             LOG.debug("==> EntitySearchProcessor.filter({})", entityVertices.size());
         }
 
+        // Since we already have the entity vertices, a in-memory filter will be faster than fetching the same
+        // vertices again with the required filtering
+        if (filterGraphQueryPredicate != null) {
+            LOG.debug("Filtering in-memory");
+            CollectionUtils.filter(entityVertices, filterGraphQueryPredicate);
+        }
+
         /*
-            FIX: Add a condition for in memory filtering. Text searching is breaking because of in memory filtering. Do in memory only if query text is not present.
+            FIX: Text searching and sorting is not done by in memory filtering. Do filtering through ES if query text is present or sorting is present.
          */
-        if (super.context.getSearchParameters().getQuery() == null || super.context.getSearchParameters().getQuery() == ""){
-            // Since we already have the entity vertices, a in-memory filter will be faster than fetching the same
-            // vertices again with the required filtering
-            if (filterGraphQueryPredicate != null) {
-                LOG.debug("Filtering in-memory");
-                CollectionUtils.filter(entityVertices, filterGraphQueryPredicate);
-            }
-        } else {
+        if ((context.getSearchParameters().getQuery() != null && context.getSearchParameters().getQuery()!="") || (context.getSearchParameters().getSortBy()!=null && context.getSearchParameters().getSortBy()!="")) {
             //Do index query
             StringBuilder indexQuery = new StringBuilder(ESIndexQueryString);
 
