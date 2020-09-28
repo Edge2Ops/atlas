@@ -353,8 +353,9 @@ public class EntitySearchProcessor extends SearchProcessor {
 
         /*
             FIX: Text searching and sorting is not done by in memory filtering. Do filtering through ES if query text is present or sorting is present.
+            This is right now only for AtlanAsset type
          */
-        if ((context.getSearchParameters().getQuery() != null && context.getSearchParameters().getQuery()!="") || (context.getSearchParameters().getSortBy()!=null && context.getSearchParameters().getSortBy()!="")) {
+        if (context.getSuperTypes().contains(Constants.ATLAN_ASSET_TYPE) && ((context.getSearchParameters().getQuery() != null && context.getSearchParameters().getQuery()!="") || (context.getSearchParameters().getSortBy()!=null && context.getSearchParameters().getSortBy()!=""))) {
             //Do index query
             StringBuilder indexQuery = new StringBuilder(ESIndexQueryString);
 

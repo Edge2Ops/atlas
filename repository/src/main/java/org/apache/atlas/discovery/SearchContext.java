@@ -66,6 +66,7 @@ public class SearchContext {
     private final Set<AtlasClassificationType> classificationTypes;
     private final Set<String> classificationNames;
     private final Set<String> typeAndSubTypes;
+    private final Set<String> superTypes;
     private final Set<String> classificationTypeAndSubTypes;
     private final String typeAndSubTypesQryStr;
     private final String classificationTypeAndSubTypesQryStr;
@@ -170,6 +171,7 @@ public class SearchContext {
             typeAndSubTypes = Collections.emptySet();
             typeAndSubTypesQryStr = "";
         }
+        this.superTypes = superTypes;
         this.typeAndSubTypes = typeAndSubTypes;
         this.typeAndSubTypesQryStr = typeAndSubTypesQryStr;
 
@@ -238,6 +240,10 @@ public class SearchContext {
 
     public String getEntityTypesQryStr() {
         return typeAndSubTypesQryStr;
+    }
+
+    public Set<String> getSuperTypes() {
+        return superTypes;
     }
 
     public String getClassificationTypesQryStr() {
