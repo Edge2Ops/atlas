@@ -66,24 +66,10 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         validateType(classificationDef);
 
-        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
-        if (userRealm != "") {
-            classificationDef.setTenant(userRealm);
-        }
-
         AtlasType type = typeRegistry.getType(classificationDef.getName());
 
         if (type.getTypeCategory() != org.apache.atlas.model.TypeCategory.CLASSIFICATION) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_MATCH_FAILED, classificationDef.getName(), TypeCategory.TRAIT.name());
-        }
-
-        if (classificationDef.getDisplayName() == null) {
-            classificationDef.setDisplayName(classificationDef.getName());
-            classificationDef.setName(classificationDef.getTenant() + "_" + classificationDef.getName());
-        }
-
-        if (!classificationDef.getName().startsWith(classificationDef.getTenant() + "_")) {
-            classificationDef.setName(classificationDef.getTenant() + "_" + classificationDef.getName());
         }
 
         AtlasVertex ret = typeDefStore.findTypeVertexByName(classificationDef.getName());
@@ -112,20 +98,6 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_CREATE, classificationDef), "create classification-def ", classificationDef.getName());
 
         AtlasVertex vertex = (preCreateResult == null) ? preCreate(classificationDef) : preCreateResult;
-
-        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
-        if (userRealm != "") {
-            classificationDef.setTenant(userRealm);
-        }
-
-        if (classificationDef.getDisplayName() == null) {
-            classificationDef.setDisplayName(classificationDef.getName());
-            classificationDef.setName(classificationDef.getTenant() + "_" + classificationDef.getName());
-        }
-
-        if (!classificationDef.getName().startsWith(classificationDef.getTenant() + "_")) {
-            classificationDef.setName(classificationDef.getTenant() + "_" + classificationDef.getName());
-        }
 
         updateVertexAddReferences(classificationDef, vertex);
 

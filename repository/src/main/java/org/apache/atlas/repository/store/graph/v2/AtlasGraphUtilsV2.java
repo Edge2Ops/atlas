@@ -571,7 +571,7 @@ public class AtlasGraphUtilsV2 {
         while (results.hasNext()) {
             AtlasVertex result = results.next();
             String tenant = result.getProperty(propertyName, String.class);
-            if (tenant.equals(propertyValue)) {
+            if (tenant != null && tenant.equals(propertyValue)) {
                 ret.add(getIdFromVertex(result));
             }
         }
