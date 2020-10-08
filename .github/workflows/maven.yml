@@ -71,7 +71,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git commit -m "atlas"
-        git push origin trial
+        git push origin atlasAutomation
 
     # Send a slack notification message on the specified channel with the failure github actions workflow report.
     - name: Slack Notification
