@@ -124,9 +124,9 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         while (vertices.hasNext()) {
             AtlasVertex vertex = vertices.next();
             System.out.println(vertex);
-            if (userRealm == "") {
+            if (userRealm.isEmpty()) {
                 ret.add(toClassificationDef(vertex));
-            } else if (userRealm != "" && userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
+            } else if (!userRealm.isEmpty() && userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
                 ret.add(toClassificationDef(vertex));
             }
         }
@@ -150,7 +150,7 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         }
 
         String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
-        if (userRealm != "" && !userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
+        if (!userRealm.isEmpty() && !userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, name);
         }
 
@@ -179,7 +179,7 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
 
-        if (userRealm != "" && !userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
+        if (!userRealm.isEmpty() && !userRealm.equals(vertex.getProperty(Constants.TYPE_TENANT_PROPERTY_KEY, String.class))) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, guid);
         }
 
@@ -202,7 +202,7 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
 
-        if (userRealm != "" && !userRealm.equals(classifiDef.getTenant())) {
+        if (!userRealm.isEmpty() && !userRealm.equals(classifiDef.getTenant())) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, classifiDef.getGuid());
         }
 
@@ -299,7 +299,7 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
 
-        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
+        if (!userRealm.isEmpty() && !userRealm.equals(existingDef.getTenant())) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, existingDef.getName());
         }
 
@@ -335,7 +335,7 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
 
         String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
 
-        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
+        if (!userRealm.isEmpty() && !userRealm.equals(existingDef.getTenant())) {
             throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, existingDef.getGuid());
         }
 
