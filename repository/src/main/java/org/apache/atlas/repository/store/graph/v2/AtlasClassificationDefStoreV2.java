@@ -206,15 +206,6 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
             throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, classifiDef.getGuid());
         }
 
-        if (classifiDef.getDisplayName() == null) {
-            classifiDef.setDisplayName(classifiDef.getName());
-            classifiDef.setName(classifiDef.getTenant() + "_" + classifiDef.getName());
-        }
-
-        if (!classifiDef.getName().startsWith(classifiDef.getTenant() + "_")) {
-            classifiDef.setName(classifiDef.getTenant() + "_" + classifiDef.getName());
-        }
-
         AtlasClassificationDef ret = StringUtils.isNotBlank(classifiDef.getGuid())
                   ? updateByGuid(classifiDef.getGuid(), classifiDef) : updateByName(classifiDef.getName(), classifiDef);
 
@@ -233,21 +224,6 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         }
 
         AtlasClassificationDef existingDef   = typeRegistry.getClassificationDefByName(name);
-
-        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
-
-        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
-            throw new AtlasBaseException(AtlasErrorCode.TYPE_NAME_NOT_FOUND, existingDef.getName());
-        }
-
-        if (existingDef.getDisplayName() == null) {
-            existingDef.setDisplayName(existingDef.getName());
-            existingDef.setName(existingDef.getTenant() + "_" + existingDef.getName());
-        }
-
-        if (!existingDef.getName().startsWith(existingDef.getTenant() + "_")) {
-            existingDef.setName(existingDef.getTenant() + "_" + existingDef.getName());
-        }
 
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_UPDATE, existingDef), "update classification-def ", name);
 
@@ -284,21 +260,6 @@ class AtlasClassificationDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasClassif
         }
 
         AtlasClassificationDef existingDef   = typeRegistry.getClassificationDefByGuid(guid);
-
-        String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
-
-        if (userRealm != "" && !userRealm.equals(existingDef.getTenant())) {
-            throw new AtlasBaseException(AtlasErrorCode.TYPE_GUID_NOT_FOUND, existingDef.getGuid());
-        }
-
-        if (classificationDef.getDisplayName() == null) {
-            classificationDef.setDisplayName(classificationDef.getName());
-            classificationDef.setName(classificationDef.getTenant() + "_" + classificationDef.getName());
-        }
-
-        if (!classificationDef.getName().startsWith(classificationDef.getTenant() + "_")) {
-            classificationDef.setName(classificationDef.getTenant() + "_" + classificationDef.getName());
-        }
 
         AtlasAuthorizationUtils.verifyAccess(new AtlasTypeAccessRequest(AtlasPrivilege.TYPE_UPDATE, existingDef), "update classification-def ", (existingDef != null ? existingDef.getName() : guid));
 
