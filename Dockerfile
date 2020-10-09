@@ -21,9 +21,8 @@ RUN wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/mave
 RUN unzip maven_local_repository.zip -d .m2
 
 FROM maven:3.5-jdk-8-alpine
-WORKDIR /app
-COPY --from=local_maven /app/.m2 app/.m2
-COPY . /app
+COPY --from=local_maven /app/.m2 ~/.m2
+COPY . ~/
 RUN echo "[INFO] Maven Building"
 RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist
 RUN ls
