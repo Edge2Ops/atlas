@@ -11,9 +11,19 @@ RUN apt-get update \
         python \
         openjdk-8-jdk-headless \
         patch \
+        unzip \
         netcat \
         curl \
-    && cd / \
+    && cd / 
+
+RUN mkdir ~/.m2
+RUN wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/maven_local_repository.zip
+RUN unzip maven_local_repository.zip -d ~/.m2
+RUN echo "[INFO] Maven Building"
+RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist
+RUN echo "[INFO] Listing the directory"
+RUN ls
+
     && wget https://atlan-public.s3-eu-west-1.amazonaws.com/atlas-tar-test/apache-atlas-2.0.0-server.tar.gz \
     && mkdir /tmp/atlas-src \
     && mkdir /opt/ranger-atlas-plugin \
