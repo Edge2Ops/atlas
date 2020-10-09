@@ -48,6 +48,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.shaded.minlog.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -412,6 +413,35 @@ public class GlossaryService {
     }
 
     @GraphTransaction
+    public List<AtlasGlossaryTerm> createTermsBulk(List<AtlasGlossaryTerm> glossaryTerm) throws AtlasBaseException {
+        if (DEBUG_ENABLED) {
+            LOG.debug("==> GlossaryService.create({})", glossaryTerm);
+        }
+
+        if (Objects.isNull(glossaryTerm)) {
+            throw new AtlasBaseException(AtlasErrorCode.BAD_REQUEST, "glossaryTerm(s) is null/empty");
+        }
+
+
+        List<AtlasGlossaryTerm> ret = new ArrayList<>();
+        for (AtlasGlossaryTerm atlasGlossaryTerm : glossaryTerm) {
+            try {
+                AtlasGlossaryTerm term = createTerm(atlasGlossaryTerm);
+                ret.add(term);
+                LOG.info("Successfully created term - " + atlasGlossaryTerm.getQualifiedName());
+            } catch (Exception e) {
+                LOG.info("Failed to create AtlasGlossaryTerm - " + atlasGlossaryTerm.getQualifiedName());
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== GlossaryService.createTerms() : {}", ret);
+        }
+
+        return ret;
+    }
+
+    @GraphTransaction
     public AtlasGlossaryTerm updateTerm(AtlasGlossaryTerm atlasGlossaryTerm) throws AtlasBaseException {
         if (DEBUG_ENABLED) {
             LOG.debug("==> GlossaryService.updateTerm({})", atlasGlossaryTerm);
@@ -514,6 +544,25 @@ public class GlossaryService {
         if (DEBUG_ENABLED) {
             LOG.debug("<== GlossaryService.assignTermToEntities()");
         }
+
+    }
+
+    @GraphTransaction
+    public void assignTermToEntitiesBulk(List<AtlasGlossaryTerm> terms) throws AtlasBaseException {
+//        if (DEBUG_ENABLED) {
+//            LOG.debug("==> GlossaryService.assignTermToEntities({}, {})", termGuid, relatedObjectIds);
+//        }
+
+        for (AtlasGlossaryTerm term : terms) {
+            List<AtlasRelatedObjectId> relatedObjectIds = new ArrayList<>(term.getAssignedEntities());
+            AtlasGlossaryTerm glossaryTerm = dataAccess.load(getAtlasGlossaryTermSkeleton(term.getGuid()));
+            glossaryTermUtils.processTermAssignments(glossaryTerm, relatedObjectIds);
+            entityChangeNotifier.onTermAddedToEntities(glossaryTerm, relatedObjectIds);
+        }
+
+//        if (DEBUG_ENABLED) {
+//            LOG.debug("<== GlossaryService.assignTermToEntities()");
+//        }
 
     }
 
@@ -1364,9 +1413,11 @@ public class GlossaryService {
             List<String> failedTermMsgs = new ArrayList<>();
 
             ret = glossaryTermUtils.getGlossaryTermEntitiesDataList(fileData, failedTermMsgs);
-            for (AtlasGlossaryTerm term : ret) {
-                assignTermToEntities(term.getGuid(), new ArrayList<>(term.getAssignedEntities()));
-            }
+            assignTermToEntitiesBulk(ret);
+            // TODO: Fix transaction, get rid of the line below
+            // This function call shouldn't be here. Without this, it doesn't write the last assignment to the database.
+            // Looks like some transaction magic I'm too tired to understand
+            assignTermToEntities(ret.get(0).getGuid(), new ArrayList<>(ret.get(0).getAssignedEntities()));
         } catch (IOException e) {
             throw new AtlasBaseException(AtlasErrorCode.FAILED_TO_UPLOAD, e);
         }
@@ -1375,15 +1426,15 @@ public class GlossaryService {
     }
 
     private List<AtlasGlossaryTerm> createGlossaryTerms(List<AtlasGlossaryTerm> glossaryTerms) throws AtlasBaseException {
-        List<AtlasGlossaryTerm> ret = new ArrayList<>();
+        List<AtlasGlossaryTerm> ret = createTermsBulk(glossaryTerms);
 
-        for (AtlasGlossaryTerm glossaryTerm : glossaryTerms) {
-            try {
-                ret.add(createTerm(glossaryTerm));
-            } catch (AtlasBaseException e) {
-                throw new AtlasBaseException(AtlasErrorCode.FAILED_TO_CREATE_GLOSSARY_TERM, e);
-            }
-        }
+//        for (AtlasGlossaryTerm glossaryTerm : glossaryTerms) {
+//            try {
+//                ret.add(createTerm(glossaryTerm));
+//            } catch (AtlasBaseException e) {
+//                throw new AtlasBaseException(AtlasErrorCode.FAILED_TO_CREATE_GLOSSARY_TERM, e);
+//            }
+//        }
 
         return ret;
     }

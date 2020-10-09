@@ -767,18 +767,28 @@ public class GlossaryTermUtils extends GlossaryUtils {
             AtlasRelatedObjectId relatedObjectId;
 
             for (String data : csvRecordArray) {
-                AtlasVertex vertex      = null;
-
+                String guid      = "";
+                AtlasVertex vertex = null;
                 if (data != "") {
-                    vertex = AtlasGraphUtilsV2.findByGuid(data);
+                    String[] dataArray = data.split(":");
+                    if (dataArray.length % 2 == 0) {
+                        vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(dataArray[0], "Referenceable.qualifiedName", dataArray[1]);
+                    } else {
+//                    vertex = AtlasGraphUtilsV2.findByGuid(data);
+                        guid = AtlasGraphUtilsV2.findGuidBySuperTypeAndUniquePropertyNameOptimized("Asset", "Referenceable.qualifiedName", data);
+                    }
                 } else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Entity does not exist : " +termName);
                 }
 
                 if (vertex != null) {
-                    String entityGuid = AtlasGraphUtilsV2.getIdFromVertex(vertex);
                     relatedObjectId       = new AtlasRelatedObjectId();
+                    String entityGuid = AtlasGraphUtilsV2.getIdFromVertex(vertex);
                     relatedObjectId.setGuid(entityGuid);
+                    ret.add(relatedObjectId);
+                } else if (!guid.isEmpty()) {
+                    relatedObjectId       = new AtlasRelatedObjectId();
+                    relatedObjectId.setGuid(guid);
                     ret.add(relatedObjectId);
                 } else {
                     failedTermMsgs.add("\n" + "The provided Reference Glossary and TermName does not exist in the system " +
@@ -844,8 +854,13 @@ public class GlossaryTermUtils extends GlossaryUtils {
                     termCategoryHeader.setCategoryGuid(glossaryCategoryGuid);
                     ret.add(termCategoryHeader);
                 } else {
-                    failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
-                            dataArray[1] + FileUtils.COLON_CHARACTER + dataArray[0] + " for record with TermName  : " + termName + " and GlossaryName : " + glossaryName);
+                    if (dataArray.length == 1) {
+                        failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
+                                glossaryName + FileUtils.COLON_CHARACTER + dataArray[0] + " for record with TermName  : " + termName + " and GlossaryName : " + glossaryName);
+                    } else {
+                        failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
+                                dataArray[1] + FileUtils.COLON_CHARACTER + dataArray[0] + " for record with TermName  : " + termName + " and GlossaryName : " + glossaryName);
+                    }
                 }
             }
 

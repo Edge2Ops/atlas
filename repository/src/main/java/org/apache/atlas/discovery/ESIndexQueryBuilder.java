@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -270,11 +270,12 @@ public class ESIndexQueryBuilder {
             fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".displayName", 500F);
             fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name", 500F);
             fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".name", 500F);
+            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".description", 50F);
             fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".integrationType", 50F);
-            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_owner", 50F);
-            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".owner", 50F);
-            fullTextQueryBuilder.fields().put(REF_ASSET_TYPE + ".qualifiedName", 10F);
-            fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".status", 10F);
+//            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_owner", 50F);
+//            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".owner", 50F);
+//            fullTextQueryBuilder.fields().put(REF_ASSET_TYPE + ".qualifiedName", 10F);
+//            fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".status", 10F);
             boolQueryBuilder.must().add(fullTextQueryBuilder);
 
             sourceBuilder.query(boolQueryBuilder);
@@ -282,11 +283,11 @@ public class ESIndexQueryBuilder {
             sourceBuilder.query(QueryBuilders.queryStringQuery(queryString));
         }
 
-        sourceBuilder.sort(new ScoreSortBuilder().order(SortOrder.DESC));
-
         if (StringUtils.isNotEmpty(sortBy)) {
             SortOrder order = sortOrder == org.apache.atlas.SortOrder.ASCENDING ? SortOrder.ASC : SortOrder.DESC;
             sourceBuilder.sort(new FieldSortBuilder(sortBy).order(order));
         }
+
+        sourceBuilder.sort(new ScoreSortBuilder().order(SortOrder.DESC));
     }
 }

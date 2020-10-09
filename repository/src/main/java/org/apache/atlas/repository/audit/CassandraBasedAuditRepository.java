@@ -88,8 +88,8 @@ public class CassandraBasedAuditRepository extends AbstractStorageBasedAuditRepo
   private static final String ENTITY = "entity";
 
   private static final String INSERT_STATEMENT_TEMPLATE = "INSERT INTO audit (entityid,created,action,user,detail,entity) VALUES (?,?,?,?,?,?)";
-  private static final String SELECT_STATEMENT_TEMPLATE = "select * from audit where entityid=? order by created desc limit 10;";
-  private static final String SELECT_DATE_STATEMENT_TEMPLATE = "select * from audit where entityid=? and created<=? order by created desc limit 10;";
+  private static final String SELECT_STATEMENT_TEMPLATE = "select * from audit where entityid=? order by created desc limit ?;";
+  private static final String SELECT_DATE_STATEMENT_TEMPLATE = "select * from audit where entityid=? and created<=? order by created desc limit ?;";
 
 
   private String keyspace;
@@ -123,12 +123,13 @@ public class CassandraBasedAuditRepository extends AbstractStorageBasedAuditRepo
     cassSession.execute(batch);
   }
 
-  private BoundStatement getSelectStatement(String entityId, String startKey) {
+  private BoundStatement getSelectStatement(String entityId, String startKey, short maxResults) {
     BoundStatement stmt;
+    Short maxResultsObj = new Short(maxResults);
     if (StringUtils.isEmpty(startKey)) {
-      stmt = new BoundStatement(selectStatement).bind(entityId);
+      stmt = new BoundStatement(selectStatement).bind(entityId, maxResultsObj.intValue());
     } else {
-      stmt = new BoundStatement(selectDateStatement).bind(entityId, Long.valueOf(startKey.split(FIELD_SEPARATOR)[1]));
+      stmt = new BoundStatement(selectDateStatement).bind(entityId, Long.valueOf(startKey.split(FIELD_SEPARATOR)[1]), maxResultsObj.intValue());
     }
     return stmt;
   }
@@ -139,7 +140,7 @@ public class CassandraBasedAuditRepository extends AbstractStorageBasedAuditRepo
       LOG.debug("Listing events for entity id {}, starting timestamp {}, #records {}", entityId, startKey, maxResults);
     }
 
-    ResultSet rs = cassSession.execute(getSelectStatement(entityId, startKey));
+    ResultSet rs = cassSession.execute(getSelectStatement(entityId, startKey, maxResults));
     List<EntityAuditEvent> entityResults = new ArrayList<>();
     for (Row row : rs) {
       String rowEntityId = row.getString(ENTITYID);
@@ -167,7 +168,7 @@ public class CassandraBasedAuditRepository extends AbstractStorageBasedAuditRepo
       LOG.debug("Listing events for entity id {}, starting timestamp {}, #records {}", entityId, startKey, maxResults);
     }
 
-    ResultSet rs = cassSession.execute(getSelectStatement(entityId, startKey));
+    ResultSet rs = cassSession.execute(getSelectStatement(entityId, startKey, maxResults));
     List<EntityAuditEventV2> entityResults = new ArrayList<>();
     for (Row row : rs) {
       String rowEntityId = row.getString(ENTITYID);

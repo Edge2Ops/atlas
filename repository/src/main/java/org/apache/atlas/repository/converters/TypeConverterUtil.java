@@ -61,7 +61,9 @@ import org.slf4j.LoggerFactory;
 
 
 public final class TypeConverterUtil {
-    private TypeConverterUtil() {}
+    private TypeConverterUtil() {
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(TypeConverterUtil.class);
 
     public static TypesDef toTypesDef(AtlasType type, AtlasTypeRegistry typeRegistry) throws AtlasBaseException {
@@ -85,10 +87,10 @@ public final class TypeConverterUtil {
     private static TypesDef enumToTypesDef(AtlasEnumType enumType) {
         AtlasEnumDef enumDef = enumType.getEnumDef();
 
-        String          enumName    = enumDef.getName();
-        String          enumDesc    = enumDef.getDescription();
-        String          enumVersion = enumDef.getTypeVersion();
-        List<EnumValue> enumValues  = getEnumValues(enumDef.getElementDefs());
+        String enumName = enumDef.getName();
+        String enumDesc = enumDef.getDescription();
+        String enumVersion = enumDef.getTypeVersion();
+        List<EnumValue> enumValues = getEnumValues(enumDef.getElementDefs());
 
         EnumTypeDefinition enumTypeDef = new EnumTypeDefinition(enumName, enumDesc, enumVersion, enumValues);
 
@@ -98,12 +100,12 @@ public final class TypeConverterUtil {
     }
 
     private static TypesDef structToTypesDef(AtlasStructType structType, AtlasTypeRegistry registry) {
-        String                    typeName    = structType.getStructDef().getName();
-        String                    typeDesc    = structType.getStructDef().getDescription();
-        String                    typeVersion = structType.getStructDef().getTypeVersion();
-        List<AttributeDefinition> attributes  = getAttributes(structType, registry);
+        String typeName = structType.getStructDef().getName();
+        String typeDesc = structType.getStructDef().getDescription();
+        String typeVersion = structType.getStructDef().getTypeVersion();
+        List<AttributeDefinition> attributes = getAttributes(structType, registry);
 
-        StructTypeDefinition  structTypeDef = new StructTypeDefinition(typeName, typeDesc, typeVersion, attributes);
+        StructTypeDefinition structTypeDef = new StructTypeDefinition(typeName, typeDesc, typeVersion, attributes);
 
         TypesDef ret = new TypesDef(null, Arrays.asList(structTypeDef), null, null);
 
@@ -111,11 +113,11 @@ public final class TypeConverterUtil {
     }
 
     private static TypesDef entityToTypesDef(AtlasEntityType entityType, AtlasTypeRegistry registry) {
-        String                    typeName    = entityType.getEntityDef().getName();
-        String                    typeDesc    = entityType.getEntityDef().getDescription();
-        String                    typeVersion = entityType.getEntityDef().getTypeVersion();
-        Set<String>               superTypes  = entityType.getEntityDef().getSuperTypes();
-        List<AttributeDefinition> attributes  = getAttributes(entityType, registry);
+        String typeName = entityType.getEntityDef().getName();
+        String typeDesc = entityType.getEntityDef().getDescription();
+        String typeVersion = entityType.getEntityDef().getTypeVersion();
+        Set<String> superTypes = entityType.getEntityDef().getSuperTypes();
+        List<AttributeDefinition> attributes = getAttributes(entityType, registry);
 
         ClassTypeDefinition classTypeDef = new ClassTypeDefinition(typeName, typeDesc, typeVersion, attributes, superTypes);
 
@@ -125,11 +127,11 @@ public final class TypeConverterUtil {
     }
 
     private static TypesDef classificationToTypesDef(AtlasClassificationType classificationType, AtlasTypeRegistry registry) {
-        String                    typeName    = classificationType.getClassificationDef().getName();
-        String                    typeDesc    = classificationType.getClassificationDef().getDescription();
-        String                    typeVersion = classificationType.getClassificationDef().getTypeVersion();
-        Set<String>               superTypes  = new HashSet<>(classificationType.getClassificationDef().getSuperTypes());
-        List<AttributeDefinition> attributes  = getAttributes(classificationType, registry);
+        String typeName = classificationType.getClassificationDef().getName();
+        String typeDesc = classificationType.getClassificationDef().getDescription();
+        String typeVersion = classificationType.getClassificationDef().getTypeVersion();
+        Set<String> superTypes = new HashSet<>(classificationType.getClassificationDef().getSuperTypes());
+        List<AttributeDefinition> attributes = getAttributes(classificationType, registry);
 
         TraitTypeDefinition traitTypeDef = new TraitTypeDefinition(typeName, typeDesc, typeVersion, attributes, superTypes);
 
@@ -137,7 +139,6 @@ public final class TypeConverterUtil {
 
         return ret;
     }
-
 
 
     public static AtlasTypesDef toAtlasTypesDef(String typeDefinition, AtlasTypeRegistry registry) throws AtlasBaseException {
@@ -213,7 +214,7 @@ public final class TypeConverterUtil {
         List<AtlasStructDef> ret = new ArrayList<>();
 
         for (StructTypeDefinition structType : structTypeDefinitions) {
-            List<AtlasAttributeDef> attrDefs  = new ArrayList<AtlasAttributeDef>();
+            List<AtlasAttributeDef> attrDefs = new ArrayList<AtlasAttributeDef>();
 
             if (CollectionUtils.isNotEmpty(structType.getAttributeDefinitions())) {
                 for (AttributeDefinition attrDefinition : structType.getAttributeDefinitions()) {
@@ -233,7 +234,7 @@ public final class TypeConverterUtil {
         List<AtlasClassificationDef> ret = new ArrayList<>();
 
         for (TraitTypeDefinition traitType : traitTypeDefinitions) {
-            List<AtlasAttributeDef> attrDefs   = new ArrayList<AtlasAttributeDef>();
+            List<AtlasAttributeDef> attrDefs = new ArrayList<AtlasAttributeDef>();
 
             if (CollectionUtils.isNotEmpty(traitType.getAttributeDefinitions())) {
                 for (AttributeDefinition attrDefinition : traitType.getAttributeDefinitions()) {
@@ -253,7 +254,7 @@ public final class TypeConverterUtil {
         List<AtlasEntityDef> ret = new ArrayList<>();
 
         for (ClassTypeDefinition classType : classTypeDefinitions) {
-            List<AtlasAttributeDef> attrDefs         = new ArrayList<AtlasAttributeDef>();
+            List<AtlasAttributeDef> attrDefs = new ArrayList<AtlasAttributeDef>();
 
             if (CollectionUtils.isNotEmpty(classType.getAttributeDefinitions())) {
                 for (AttributeDefinition oldAttr : classType.getAttributeDefinitions()) {
@@ -308,9 +309,9 @@ public final class TypeConverterUtil {
 
     public static AtlasAttributeDef toAtlasAttributeDef(final AttributeDefinition attrDefinition) {
         AtlasAttributeDef ret = new AtlasAttributeDef(attrDefinition.getName(),
-                                                      attrDefinition.getDataTypeName(),
-                                                      attrDefinition.getSearchWeight(),
-                                                      attrDefinition.getIndexType());
+                attrDefinition.getDataTypeName(),
+                attrDefinition.getSearchWeight(),
+                attrDefinition.getIndexType());
 
         ret.setIsIndexable(attrDefinition.getIsIndexable());
         ret.setIsUnique(attrDefinition.getIsUnique());
@@ -320,16 +321,16 @@ public final class TypeConverterUtil {
 
         if (StringUtils.isNotBlank(attrDefinition.getReverseAttributeName())) {
             ret.addConstraint(new AtlasConstraintDef(CONSTRAINT_TYPE_INVERSE_REF,
-                                       new HashMap<String, Object>() {{
-                                           put(CONSTRAINT_PARAM_ATTRIBUTE, attrDefinition.getReverseAttributeName());
-                                       }}));
+                    new HashMap<String, Object>() {{
+                        put(CONSTRAINT_PARAM_ATTRIBUTE, attrDefinition.getReverseAttributeName());
+                    }}));
         }
 
         // Multiplicity attribute mapping
         Multiplicity multiplicity = attrDefinition.getMultiplicity();
-        int          minCount     = multiplicity.getLower();
-        int          maxCount     = multiplicity.getUpper();
-        boolean      isUnique     = multiplicity.getIsUnique();
+        int minCount = multiplicity.getLower();
+        int maxCount = multiplicity.getUpper();
+        boolean isUnique = multiplicity.getIsUnique();
 
         if (minCount == 0) {
             ret.setIsOptional(true);
@@ -356,8 +357,8 @@ public final class TypeConverterUtil {
     }
 
     private static List<AttributeDefinition> getAttributes(AtlasStructType structType, AtlasTypeRegistry registry) {
-        List<AttributeDefinition> ret      = new ArrayList<>();
-        List<AtlasAttributeDef>   attrDefs = structType.getStructDef().getAttributeDefs();
+        List<AttributeDefinition> ret = new ArrayList<>();
+        List<AtlasAttributeDef> attrDefs = structType.getStructDef().getAttributeDefs();
 
         if (CollectionUtils.isNotEmpty(attrDefs)) {
             for (AtlasAttributeDef attrDef : attrDefs) {
@@ -366,15 +367,15 @@ public final class TypeConverterUtil {
                 AttributeDefinition oldAttrDef = AtlasStructDefStoreV2.toAttributeDefinition(attribute);
 
                 ret.add(new AttributeDefinition(oldAttrDef.getName(),
-                                                oldAttrDef.getDataTypeName(),
-                                                new Multiplicity(oldAttrDef.getMultiplicity()),
-                                                oldAttrDef.getIsComposite(),
-                                                oldAttrDef.getIsUnique(),
-                                                oldAttrDef.getIsIndexable(),
-                                                oldAttrDef.getReverseAttributeName(),
-                                                oldAttrDef.getOptions(),
-                                                oldAttrDef.getSearchWeight(),
-                                                oldAttrDef.getIndexType()));
+                        oldAttrDef.getDataTypeName(),
+                        new Multiplicity(oldAttrDef.getMultiplicity()),
+                        oldAttrDef.getIsComposite(),
+                        oldAttrDef.getIsUnique(),
+                        oldAttrDef.getIsIndexable(),
+                        oldAttrDef.getReverseAttributeName(),
+                        oldAttrDef.getOptions(),
+                        oldAttrDef.getSearchWeight(),
+                        oldAttrDef.getIndexType(), oldAttrDef.getNormalizer()));
             }
         }
 

@@ -473,6 +473,10 @@ public class AtlasGraphUtilsV2 {
         return vertex;
     }
 
+    public static AtlasVertex findBySuperTypeAndUniquePropertyName(String typeName, String propertyName, Object attrVal) {
+        return findBySuperTypeAndUniquePropertyName(getGraphInstance(), typeName, propertyName, attrVal);
+    }
+
     public static AtlasVertex findBySuperTypeAndUniquePropertyName(AtlasGraph graph, String typeName, String propertyName, Object attrVal) {
         MetricRecorder metric = RequestContext.get().startMetricRecord("findBySuperTypeAndUniquePropertyName");
 
@@ -487,6 +491,29 @@ public class AtlasGraphUtilsV2 {
         RequestContext.get().endMetricRecord(metric);
 
         return vertex;
+    }
+
+    public static String findGuidBySuperTypeAndUniquePropertyNameOptimized(String typeName, String propertyName, Object attrVal) {
+        return findGuidBySuperTypeAndUniquePropertyNameOptimized(getGraphInstance(), typeName, propertyName, attrVal);
+    }
+
+    public static String findGuidBySuperTypeAndUniquePropertyNameOptimized(AtlasGraph graph, String typeName, String propertyName, Object attrVal) {
+        MetricRecorder metric = RequestContext.get().startMetricRecord("findBySuperTypeAndUniquePropertyName");
+
+        AtlasGraphTraversal query = (AtlasGraphTraversal) graph.V()
+                .has(propertyName, attrVal).valueMap(Constants.GUID_PROPERTY_KEY).limit(1);
+
+        List<Map<String, List<String>>> results = query.toList();
+
+        String guid = "";
+
+        if (results.size() > 0) {
+            guid = results.get(0).get(Constants.GUID_PROPERTY_KEY).get(0);
+        }
+
+        RequestContext.get().endMetricRecord(metric);
+
+        return guid;
     }
 
     public static AtlasVertex findByTypeAndPropertyName(AtlasGraph graph, String typeName, String propertyName, Object attrVal) {

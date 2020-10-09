@@ -153,13 +153,11 @@ public class EntityREST {
 
             for (int i=0; i < entities.size(); i++) {
                 try {
-                    LOG.info("Evaluating " + entities.get(i).getAction() + " on " + entities.get(i).getEntityGuid());
-                    AtlasEntityWithExtInfo entity = entitiesStore.getById(entities.get(i).getEntityGuid(), true, true);
-                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entity.getEntity())));
-                    LOG.info(entities.get(i).getAction() + " allowed on " + entities.get(i).getEntityGuid());
+                    AtlasEntity entity = new AtlasEntity();
+                    entity.setGuid(entities.get(i).getEntityGuid());
+                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entity), false));
                     response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), true));
                 } catch (AtlasBaseException e) {
-                    LOG.info(entities.get(i).getAction() + " denied on " + entities.get(i).getEntityGuid());
                     response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), false));
                 }
             }

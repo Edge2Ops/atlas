@@ -70,7 +70,8 @@
           "isIndexable": true,
           "isOptional": false,
           "isUnique": false,
-          "indexType": "STRING"
+          "indexType": "STRING",
+          "normalizer": "lowerasciinormalizer"
         },
         {
           "name": "displayName",
