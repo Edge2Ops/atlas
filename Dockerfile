@@ -22,7 +22,7 @@ RUN unzip maven_local_repository.zip -d .m2
 
 FROM maven:3.5-jdk-8-alpine
 COPY --from=local_maven /app/.m2 ~/.m2
-COPY . ~/
+COPY . /
 RUN echo "[INFO] Maven Building"
 RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist
 RUN ls
