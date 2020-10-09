@@ -24,32 +24,31 @@ RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.s
 RUN echo "[INFO] Listing the directory"
 RUN ls
 
-RUN  wget https://atlan-public.s3-eu-west-1.amazonaws.com/atlas-tar-test/apache-atlas-2.0.0-server.tar.gz \
-    && mkdir /tmp/atlas-src \
-    && mkdir /opt/ranger-atlas-plugin \
-    && export MAVEN_OPTS="-Xms2g -Xmx2g" \
-    && export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64" \
-    && tar -xzvf /apache-atlas-2.0.0-server.tar.gz -C /opt \
-    && rm -Rf /tmp/atlas-src \
-    && apt-get clean \
-    && rm -rf /apache-atlas-2.0.0-server.tar.gz
-
-COPY atlas-hub/atlas_start.py.patch atlas-hub/atlas_config.py.patch /opt/apache-atlas-${VERSION}/bin/
-COPY atlas-hub/pre-conf/atlas-application.properties /opt/apache-atlas-${VERSION}/conf/atlas-application.properties
-COPY atlas-hub/pre-conf/atlas-env.sh /opt/apache-atlas-${VERSION}/conf/atlas-env.sh
-COPY atlas-hub/pre-conf/ranger/lib/ /opt/apache-atlas-${VERSION}/libext/
-COPY atlas-hub/pre-conf/ranger/install/conf.templates/enable/ /opt/apache-atlas-${VERSION}/conf/
-COPY atlas-hub/pre-conf/atlas-log4j.xml /opt/apache-atlas-${VERSION}/conf/
-COPY atlas-hub/pre-conf/ranger/ /opt/ranger-atlas-plugin/
-COPY atlas-hub/env_change.sh /
-
-RUN cd /opt/apache-atlas-${VERSION}/bin \
-    && patch -b -f < atlas_start.py.patch \
-    && patch -b -f < atlas_config.py.patch \
-    && sed -i "s~ATLAS_INSTALL_DIR~/opt/apache-atlas-${VERSION}~g" /opt/ranger-atlas-plugin/install.properties \ 
-    && chmod +x /env_change.sh
-
-RUN cd /opt/apache-atlas-${VERSION}/bin \
-    && ./atlas_start.py -setup || true
-
-VOLUME ["/opt/apache-atlas-2.0.0/conf", "/opt/apache-atlas-2.0.0/logs"]
+# RUN mkdir /tmp/atlas-src \
+#     && mkdir /opt/ranger-atlas-plugin \
+#     && export MAVEN_OPTS="-Xms2g -Xmx2g" \
+#     && export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64" \
+#     && tar -xzvf distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz -C /opt \
+#     && rm -Rf /tmp/atlas-src \
+#     && apt-get clean \
+#     && rm -rf /apache-atlas-2.0.0-server.tar.gz
+# 
+# COPY atlas-hub/atlas_start.py.patch atlas-hub/atlas_config.py.patch /opt/apache-atlas-${VERSION}/bin/
+# COPY atlas-hub/pre-conf/atlas-application.properties /opt/apache-atlas-${VERSION}/conf/atlas-application.properties
+# COPY atlas-hub/pre-conf/atlas-env.sh /opt/apache-atlas-${VERSION}/conf/atlas-env.sh
+# COPY atlas-hub/pre-conf/ranger/lib/ /opt/apache-atlas-${VERSION}/libext/
+# COPY atlas-hub/pre-conf/ranger/install/conf.templates/enable/ /opt/apache-atlas-${VERSION}/conf/
+# COPY atlas-hub/pre-conf/atlas-log4j.xml /opt/apache-atlas-${VERSION}/conf/
+# COPY atlas-hub/pre-conf/ranger/ /opt/ranger-atlas-plugin/
+# COPY atlas-hub/env_change.sh /
+# 
+# RUN cd /opt/apache-atlas-${VERSION}/bin \
+#     && patch -b -f < atlas_start.py.patch \
+#     && patch -b -f < atlas_config.py.patch \
+#     && sed -i "s~ATLAS_INSTALL_DIR~/opt/apache-atlas-${VERSION}~g" /opt/ranger-atlas-plugin/install.properties \ 
+#     && chmod +x /env_change.sh
+# 
+# RUN cd /opt/apache-atlas-${VERSION}/bin \
+#     && ./atlas_start.py -setup || true
+# 
+# VOLUME ["/opt/apache-atlas-2.0.0/conf", "/opt/apache-atlas-2.0.0/logs"]
