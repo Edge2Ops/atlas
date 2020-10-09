@@ -32,7 +32,7 @@ RUN cd / \
     && mv /atlas-index-repair-tool-${VERSION}.jar /opt/apache-atlas/libext/ \
     && rm -rf /atlas-index-repair-tool-${VERSION}.tar.gz
 COPY atlas-hub/pre-conf/atlas-script-application.properties /opt/apache-atlas/conf/atlas-script-application.properties
-COPY repair_index.py /opt/apache-atlas/bin/
+COPY atlas-hub/repair_index.py /opt/apache-atlas/bin/
 
 RUN chmod +x /opt/apache-atlas/bin/repair_index.py
 
