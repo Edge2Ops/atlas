@@ -35,9 +35,6 @@ jobs:
         java-version: 1.8
     - name: Build with Maven
       run: chmod +x ./build.sh && ./build.sh
-      env:
-        AWS_ACCESS_KEY_ID:  ${{secrets.S3_AWS_ACCESS_KEY_ID}}
-        AWS_SECRET_ACCESS_KEY:  ${{secrets.S3_AWS_SECRET_ACCESS_KEY}}
 
     - name: Get branch name
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
