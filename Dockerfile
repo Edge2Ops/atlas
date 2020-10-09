@@ -24,6 +24,8 @@ FROM maven:3.5-jdk-8-alpine
 COPY --from=local_maven /app/.m2 ~/.m2
 COPY . /
 RUN echo "[INFO] Maven Building"
+RUN df
+RUN echo $MAVEN_OPTS
 RUN export MAVEN_OPTS="-Xmx4096m -XX:MaxPermSize=1024m"
 RUN mvn -X  -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist
 RUN ls
