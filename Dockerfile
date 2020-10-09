@@ -5,8 +5,6 @@ ARG VERSION=3.0.0-SNAPSHOT
 
 COPY distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz  /apache-atlas-3.0.0-SNAPSHOT-server.tar.gz
 
-COPY distro/target/atlas-index-repair-tool-3.0.0-SNAPSHOT.tar.gz /atlas-index-repair-tool-3.0.0-SNAPSHOT.tar.gz 
-
 RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y install apt-utils \
@@ -28,10 +26,11 @@ RUN apt-get update \
 
 # Copy the repair index jar file
 RUN cd / \
-    && tar -xzvf /atlas-index-repair-tool-3.0.0-SNAPSHOT.tar.gz \
+    && wget https://atlan-build-artifacts.s3.ap-south-1.amazonaws.com/atlas/atlas-index-repair-tool-${VERSION}.tar.gz \
+    && tar -xzvf /atlas-index-repair-tool-${VERSION}.tar.gz \
     && mkdir /opt/apache-atlas/libext \
     && mv /atlas-index-repair-tool-${VERSION}.jar /opt/apache-atlas/libext/ \
-    && rm -rf /atlas-index-repair-tool-3.0.0-SNAPSHOT.tar.gz
+    && rm -rf /atlas-index-repair-tool-${VERSION}.tar.gz
 COPY pre-conf/atlas-script-application.properties /opt/apache-atlas/conf/atlas-script-application.properties
 COPY repair_index.py /opt/apache-atlas/bin/
 
