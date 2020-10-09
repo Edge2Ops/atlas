@@ -1,8 +1,8 @@
 FROM scratch
-FROM ubuntu:18.04
+FROM ubuntu:18.04 as local_maven
 LABEL maintainer="vadim@clusterside.com"
 ARG VERSION=2.0.0
-
+WORKDIR /app
 RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y install apt-utils \
@@ -16,14 +16,21 @@ RUN apt-get update \
         curl \
     && cd / 
 
-RUN mkdir ~/.m2
+RUN mkdir .m2
 RUN wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/maven_local_repository.zip
-RUN unzip maven_local_repository.zip -d ~/.m2
+RUN unzip maven_local_repository.zip -d .m2
+
+FROM maven:3.5-jdk-8-alpine
+COPY --from=local_maven /app/.m2 ~/.m2
 RUN echo "[INFO] Maven Building"
 RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist
-RUN echo "[INFO] Listing the directory"
 RUN ls
 
+# RUN echo "[INFO] Maven Building"
+# RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist
+# RUN echo "[INFO] Listing the directory"
+# RUN ls
+# 
 # RUN mkdir /tmp/atlas-src \
 #     && mkdir /opt/ranger-atlas-plugin \
 #     && export MAVEN_OPTS="-Xms2g -Xmx2g" \
