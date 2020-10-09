@@ -36,7 +36,7 @@ COPY atlas-hub/repair_index.py /opt/apache-atlas/bin/
 
 RUN chmod +x /opt/apache-atlas/bin/repair_index.py
 
-COPY atlas-hub/atlas_start.py.patch atlas_config.py.patch /opt/apache-atlas/bin/
+COPY atlas-hub/atlas_start.py.patch atlas-hub/atlas_config.py.patch /opt/apache-atlas/bin/
 COPY atlas-hub/pre-conf/atlas-application.properties /opt/apache-atlas/conf/atlas-application.properties
 COPY atlas-hub/pre-conf/atlas-env.sh /opt/apache-atlas/conf/atlas-env.sh
 COPY atlas-hub/pre-conf/ranger/lib/ /opt/apache-atlas/libext/
