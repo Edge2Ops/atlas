@@ -26,7 +26,6 @@ aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile awsdeploy
 aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile awsdeploy
 aws configure set region ap-south-1 --profile awsdeploy
 
-
 mkdir ~/.m2
 
 wget https://atlan-build-artifacts.s3-ap-south-1.amazonaws.com/artifact/maven_local_repository.zip
@@ -39,5 +38,11 @@ echo "$(<~/.aws/credentials )"
 echo "Maven Building"
 mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.skip=true package -Pdist  
 
-echo "Sending build to s3"
-aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-build-artifacts/atlas/ --acl public-read
+echo "[INFO] listing distro/target"
+ls distro/target
+
+echo "[INFO] local"
+ls 
+
+# echo "Sending build to s3"
+# aws s3 cp distro/target/apache-atlas-3.0.0-SNAPSHOT-server.tar.gz s3://atlan-build-artifacts/atlas/ --acl public-read
