@@ -64,25 +64,24 @@ jobs:
         repository: atlanhq/charts
         token: ${{ secrets.my_pat }}
 
+    - name: Commit files
+      run: |
+        git log --oneline --decorate>>changelog.md
+        git add changelog.md
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -m "atlas"
+        git push origin trial
 
-#     - name: Commit files
-#       run: |
-#         git log --oneline --decorate>>changelog.md
-#         git add changelog.md
-#         git config --local user.email "action@github.com"
-#         git config --local user.name "GitHub Action"
-#         git commit -m "atlas"
-#         git push origin trial
-# 
-#     # Send a slack notification message on the specified channel with the failure github actions workflow report.
-#     - name: Slack Notification
-#       uses: rtCamp/action-slack-notify@v2.0.0
-#       if: failure()
-#       env:
-#         SLACK_CHANNEL: general
-#         SLACK_COLOR: '#3278BD'
-#         SLACK_ICON: https://cdn3.iconfinder.com/data/icons/popular-services-brands/512/github-512.png
-#         SLACK_MESSAGE: "- @infra, Job ${{ job.status }} :rocket:"
-#         SLACK_TITLE: Message
-#         SLACK_USERNAME: Github-Actions
-#         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+    # Send a slack notification message on the specified channel with the failure github actions workflow report.
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@v2.0.0
+      if: failure()
+      env:
+        SLACK_CHANNEL: general
+        SLACK_COLOR: '#3278BD'
+        SLACK_ICON: https://cdn3.iconfinder.com/data/icons/popular-services-brands/512/github-512.png
+        SLACK_MESSAGE: "- @infra, Job ${{ job.status }} :rocket:"
+        SLACK_TITLE: Message
+        SLACK_USERNAME: Github-Actions
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
