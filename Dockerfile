@@ -24,7 +24,7 @@ RUN mvn -pl '!addons/sqoop-bridge,!addons/sqoop-bridge-shim' -DskipTests -Drat.s
 RUN echo "[INFO] Listing the directory"
 RUN ls
 
-    && wget https://atlan-public.s3-eu-west-1.amazonaws.com/atlas-tar-test/apache-atlas-2.0.0-server.tar.gz \
+RUN  wget https://atlan-public.s3-eu-west-1.amazonaws.com/atlas-tar-test/apache-atlas-2.0.0-server.tar.gz \
     && mkdir /tmp/atlas-src \
     && mkdir /opt/ranger-atlas-plugin \
     && export MAVEN_OPTS="-Xms2g -Xmx2g" \
