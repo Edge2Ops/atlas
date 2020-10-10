@@ -140,7 +140,7 @@ public class EntitySearchProcessor extends SearchProcessor {
                 sortOrder = ASCENDING;
             }
 
-            esIndexQueryBuilder.constructSearchSource(sourceBuilder, indexQueryString, fullTextQuery, sortBy, sortOrder);
+            esIndexQueryBuilder.constructSearchSource(sourceBuilder, indexQueryString, fullTextQuery, sortBy, sortOrder, context.getSearchParameters().getMinScore());
             this.indexQuery = context.getGraph().esIndexQuery(Constants.VERTEX_INDEX, sourceBuilder);
         } else {
             this.indexQuery = null;

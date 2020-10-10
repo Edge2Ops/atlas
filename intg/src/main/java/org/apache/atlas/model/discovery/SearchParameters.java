@@ -57,6 +57,7 @@ public class SearchParameters implements Serializable {
     private FilterCriteria tagFilters;
     private Set<String>    attributes;
     private SortOrder      sortOrder;
+    private float minScore;
 
     public static final String WILDCARD_CLASSIFICATIONS = "*";
     public static final String ALL_CLASSIFICATIONS      = "_CLASSIFIED";
@@ -209,6 +210,13 @@ public class SearchParameters implements Serializable {
     }
 
     /**
+     * @return MinScore(pagination) of the results
+     */
+    public float getMinScore() {
+        return minScore;
+    }
+
+    /**
      * @param offset
      */
     public void setOffset(int offset) {
@@ -287,6 +295,13 @@ public class SearchParameters implements Serializable {
      */
     public void setSortOrder(SortOrder sortOrder) { this.sortOrder = sortOrder; }
 
+
+    /**
+     * Minimum score of the search results returned
+     * @param minScore
+     */
+    public void setMinScore(float minScore) { this.minScore = minScore; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -296,6 +311,7 @@ public class SearchParameters implements Serializable {
                 includeClassificationAttributes == that.includeClassificationAttributes &&
                 limit == that.limit &&
                 offset == that.offset &&
+                minScore == that.minScore &&
                 Objects.equals(query, that.query) &&
                 Objects.equals(typeName, that.typeName) &&
                 Objects.equals(classification, that.classification) &&
@@ -327,6 +343,7 @@ public class SearchParameters implements Serializable {
         sb.append(", includeClassificationAttributes=").append(includeClassificationAttributes);
         sb.append(", limit=").append(limit);
         sb.append(", offset=").append(offset);
+        sb.append(", minScore=").append(minScore);
         sb.append(", entityFilters=").append(entityFilters);
         sb.append(", tagFilters=").append(tagFilters);
         sb.append(", attributes=").append(attributes);

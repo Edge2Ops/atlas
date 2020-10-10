@@ -261,14 +261,16 @@ public class ESIndexQueryBuilder {
     }
 
     void constructSearchSource(SearchSourceBuilder sourceBuilder, String queryString,
-                               String fullTextQuery, String sortBy, org.apache.atlas.SortOrder sortOrder) {
+                               String fullTextQuery, String sortBy, org.apache.atlas.SortOrder sortOrder, float minScore) {
         if (StringUtils.isNotEmpty(fullTextQuery)) {
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
             boolQueryBuilder.must().add(QueryBuilders.queryStringQuery(queryString));
 
             QueryStringQueryBuilder fullTextQueryBuilder = QueryBuilders.queryStringQuery(fullTextQuery);
             fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".displayName", 500F);
-            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name", 500F);
+            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name", 1500F);
+            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name.exact", 1000F);
+            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name.text", 500F);
             fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".name", 500F);
             fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".description", 50F);
             fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".integrationType", 50F);
@@ -276,8 +278,9 @@ public class ESIndexQueryBuilder {
 //            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".owner", 50F);
 //            fullTextQueryBuilder.fields().put(REF_ASSET_TYPE + ".qualifiedName", 10F);
 //            fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".status", 10F);
-            boolQueryBuilder.must().add(fullTextQueryBuilder);
+            boolQueryBuilder.should().add(fullTextQueryBuilder);
 
+            sourceBuilder.minScore(minScore);
             sourceBuilder.query(boolQueryBuilder);
         } else {
             sourceBuilder.query(QueryBuilders.queryStringQuery(queryString));
