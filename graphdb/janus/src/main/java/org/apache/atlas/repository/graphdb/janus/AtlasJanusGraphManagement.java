@@ -212,7 +212,7 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
         }
 
         if (setupEnhancedSearch) {
-            String jsonString = "{\r\n  \"exact\": {\r\n    \"type\": \"text\",\r\n    \"analyzer\": \"english_exact_cleaned\"\r\n  },\r\n  \"text\": {\r\n    \"type\": \"text\",\r\n    \"analyzer\": \"ignore_sepcial_characters\"\r\n  }\r\n}";
+            String jsonString = "{\r\n  \"exact\": {\r\n    \"type\": \"text\",\r\n    \"analyzer\": \"english_exact_cleaned\"\r\n  },\r\n  \"text\": {\r\n    \"type\": \"text\",\r\n    \"analyzer\": \"ignore_sepcial_characters\"\r\n  },\r\n  \"ngrams\": {\r\n    \"type\": \"text\",\r\n    \"analyzer\": \"ngram_analyzer\"\r\n  }\r\n}";
             HashMap <String,HashMap<String,String>> fieldsParam = new Gson().fromJson(jsonString, new TypeToken<HashMap<String, HashMap<String,String>>>(){}.getType());
             params.add(Parameter.of(ParameterType.customParameterName("fields"), fieldsParam));
         }

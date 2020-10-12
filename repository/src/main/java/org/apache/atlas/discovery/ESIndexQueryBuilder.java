@@ -272,6 +272,7 @@ public class ESIndexQueryBuilder {
                 fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name", 1500F);
                 fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name.exact", 1000F);
                 fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name.text", 500F);
+                fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name.ngrams", 400F);
                 fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".name", 500F);
                 fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".description", 50F);
                 fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".integrationType", 50F);
