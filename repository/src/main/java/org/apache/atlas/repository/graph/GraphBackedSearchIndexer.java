@@ -528,6 +528,7 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
         final String uniqPropName = isUnique ? AtlasGraphUtilsV2.encodePropertyKey(structDef.getName() + "." + UNIQUE_ATTRIBUTE_SHADE_PROPERTY_PREFIX + attributeDef.getName()) : null;
         final AtlasAttributeDef.IndexType indexType = attributeDef.getIndexType();
         final String normalizer = attributeDef.getNormalizer();
+        final boolean setupEnhancedSerch = attributeDef.getSetupEnhancedSearch();
 
         try {
             AtlasType atlasType = typeRegistry.getType(structDef.getName());
@@ -574,7 +575,7 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
                     }
 
 
-                    createVertexIndex(management, propertyName, UniqueKind.NONE, getPrimitiveClass(attribTypeName), cardinality, isIndexable, false, isStringField, attributeDef.getNormalizer());
+                    createVertexIndex(management, propertyName, UniqueKind.NONE, getPrimitiveClass(attribTypeName), cardinality, isIndexable, false, isStringField, attributeDef.getNormalizer(), attributeDef.getSetupEnhancedSearch());
 
 
                     if (uniqPropName != null) {
@@ -734,11 +735,11 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
 
     public String createVertexIndex(AtlasGraphManagement management, String propertyName, UniqueKind uniqueKind, Class propertyClass,
                                     AtlasCardinality cardinality, boolean createCompositeIndex, boolean createCompositeIndexWithTypeAndSuperTypes, boolean isStringField) {
-        return createVertexIndex(management, propertyName, uniqueKind, propertyClass, cardinality, createCompositeIndex, createCompositeIndexWithTypeAndSuperTypes, isStringField, "");
+        return createVertexIndex(management, propertyName, uniqueKind, propertyClass, cardinality, createCompositeIndex, createCompositeIndexWithTypeAndSuperTypes, isStringField, "", false);
     }
 
     public String createVertexIndex(AtlasGraphManagement management, String propertyName, UniqueKind uniqueKind, Class propertyClass,
-                                    AtlasCardinality cardinality, boolean createCompositeIndex, boolean createCompositeIndexWithTypeAndSuperTypes, boolean isStringField, String normalizer) {
+                                    AtlasCardinality cardinality, boolean createCompositeIndex, boolean createCompositeIndexWithTypeAndSuperTypes, boolean isStringField, String normalizer, boolean setupEnhancedSearch) {
         String indexFieldName = null;
 
         if (propertyName != null) {
@@ -753,7 +754,7 @@ public class GraphBackedSearchIndexer implements SearchIndexer, ActiveStateChang
                     }
 
 
-                    indexFieldName = management.addMixedIndex(VERTEX_INDEX, propertyKey, isStringField, normalizer);
+                    indexFieldName = management.addMixedIndex(VERTEX_INDEX, propertyKey, isStringField, normalizer, setupEnhancedSearch);
 
 
                     LOG.info("Created backing index for vertex property {} of type {} ", propertyName, propertyClass.getName());

@@ -71,7 +71,8 @@
           "isOptional": false,
           "isUnique": false,
           "indexType": "STRING",
-          "normalizer": "lowerasciinormalizer"
+          "normalizer": "lowerasciinormalizer",
+          "setupEnhancedSearch": true
         },
         {
           "name": "displayName",

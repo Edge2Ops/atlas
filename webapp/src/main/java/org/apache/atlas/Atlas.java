@@ -18,6 +18,7 @@
 
 package org.apache.atlas;
 
+import com.amazonaws.services.simpleemail.model.DeleteTemplateRequest;
 import io.vavr.collection.List;
 import org.apache.atlas.repository.Constants;
 import org.apache.atlas.repository.graphdb.janus.AtlasElasticsearchDatabase;
@@ -34,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.tinkerpop.shaded.minlog.Log;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -166,31 +168,42 @@ public final class Atlas {
             GetIndexTemplatesResponse getTemplateResponse = esClient.indices().getIndexTemplate(request, RequestOptions.DEFAULT);
             LOG.info("Got get template response");
             if (getTemplateResponse.getIndexTemplates().size() != 0) {
-                LOG.info("Atlan Index Template already present!");
+                LOG.info("Atlan Index Template already present! Deleting");
             }
+            DeleteIndexTemplateRequest deleteIndexTemplateRequest = new DeleteIndexTemplateRequest("atlan_template");
+
+            AcknowledgedResponse deleteTemplateResponse = esClient.indices().deleteTemplate(deleteIndexTemplateRequest, RequestOptions.DEFAULT);
+            if (deleteTemplateResponse.isAcknowledged()) {
+                LOG.info("Atlan template deleted successfully!");
+            } else {
+                throw new Exception("Error deleting ES atlan_template");
+            }
+
         } catch (ElasticsearchStatusException e) {
             if (e.status().getStatus() == 404) {
                 LOG.info("Index template not present. Creating...");
-                PutIndexTemplateRequest indexTemplateRequest = new PutIndexTemplateRequest("atlan_template");
-                indexTemplateRequest.source("{\r\n  \"index_patterns\": [\"*janusgraph*\"],\r\n  \"settings\": {\r\n    \"analysis\": {\r\n      \"normalizer\": {\r\n        \"lowerasciinormalizer\": {\r\n          \"type\": \"custom\",\r\n          \"filter\":  [ \"lowercase\", \"asciifolding\" ]\r\n        }\r\n      }\r\n    }\r\n  }\r\n}", XContentType.JSON);
-
-                try {
-                    AcknowledgedResponse putTemplateResponse = esClient.indices().putTemplate(indexTemplateRequest, RequestOptions.DEFAULT);
-                    if (putTemplateResponse.isAcknowledged()) {
-                        LOG.info("Atlan index template created.");
-                    } else {
-                        LOG.error("error creating atlan index template");
-                    }
-                } catch (Exception es) {
-                    LOG.error("Caught exception: ", es.toString());
-                }
-
             } else {
                 LOG.error("Error fetching index template");
             }
         } catch (Exception e) {
             LOG.error("Caught exception: ", e.toString());
         }
+
+        PutIndexTemplateRequest indexTemplateRequest = new PutIndexTemplateRequest("atlan_template");
+        indexTemplateRequest.source("{\r\n  \"index_patterns\": [\r\n    \"*janusgraph*\"\r\n  ],\r\n  \"settings\": {\r\n    \"analysis\": {\r\n      \"normalizer\": {\r\n        \"lowerasciinormalizer\": {\r\n          \"type\": \"custom\",\r\n          \"filter\": [\r\n            \"lowercase\",\r\n            \"asciifolding\"\r\n          ]\r\n        }\r\n      },\r\n      \"filter\": {\r\n        \"clean_with_spaces\": {\r\n          \"pattern\": \"(-|_)\",\r\n          \"type\": \"pattern_replace\",\r\n          \"replacement\": \" \"\r\n        }\r\n      },\r\n      \"analyzer\": {\r\n        \"english_exact_cleaned\": {\r\n          \"filter\": [\r\n            \"lowercase\",\r\n            \"clean_with_spaces\"\r\n          ],\r\n          \"tokenizer\": \"keyword\"\r\n        },\r\n        \"ignore_sepcial_characters\": {\r\n          \"filter\": [\r\n            \"lowercase\"\r\n          ],\r\n          \"tokenizer\": \"special_tokenizer\"\r\n        },\r\n        \"folding\": {\r\n          \"filter\": [\r\n            \"lowercase\",\r\n            \"asciifolding\"\r\n          ],\r\n          \"tokenizer\": \"standard\"\r\n        },\r\n        \"ngram_analyzer\": {\r\n          \"filter\": [\r\n            \"lowercase\"\r\n          ],\r\n          \"tokenizer\": \"ngram_tokenizer\"\r\n        }\r\n      },\r\n      \"tokenizer\": {\r\n        \"special_tokenizer\": {\r\n          \"pattern\": \"( |_|-)\",\r\n          \"type\": \"pattern\"\r\n        },\r\n        \"ngram_tokenizer\": {\r\n          \"type\": \"ngram\",\r\n          \"min_gram\": 3,\r\n          \"max_gram\": 5,\r\n          \"token_chars\": [\r\n            \"letter\",\r\n            \"digit\"\r\n          ]\r\n        }\r\n      }\r\n    }\r\n  }\r\n}", XContentType.JSON);
+
+        try {
+            AcknowledgedResponse putTemplateResponse = esClient.indices().putTemplate(indexTemplateRequest, RequestOptions.DEFAULT);
+            if (putTemplateResponse.isAcknowledged()) {
+                LOG.info("Atlan index template created.");
+            } else {
+                LOG.error("error creating atlan index template");
+            }
+        } catch (Exception es) {
+            LOG.error("Caught exception: ", es.toString());
+        }
+
+
     }
 
     private static void setApplicationHome() {

@@ -57,12 +57,13 @@ public class AttributeDefinition implements Serializable {
     private int searchWeight = DEFAULT_SEARCHWEIGHT;
     private AtlasStructDef.AtlasAttributeDef.IndexType indexType = null;
     private String normalizer = null;
+    private boolean setupEnhancedSearch = false;
 
     public AttributeDefinition() {
     }
 
     public AttributeDefinition(String name, String dataTypeName, Multiplicity multiplicity) {
-        this(name, dataTypeName, multiplicity, false, false, true, null, null, DEFAULT_SEARCHWEIGHT, null, null);
+        this(name, dataTypeName, multiplicity, false, false, true, null, null, DEFAULT_SEARCHWEIGHT, null, null, false);
     }
 
     public AttributeDefinition(String name, String dataTypeName, Multiplicity multiplicity, boolean isComposite,
@@ -72,18 +73,18 @@ public class AttributeDefinition implements Serializable {
 
     public AttributeDefinition(String name, String dataTypeName, Multiplicity multiplicity, boolean isComposite,
                                String reverseAttributeName, int searchWeight, AtlasStructDef.AtlasAttributeDef.IndexType indexType) {
-        this(name, dataTypeName, multiplicity, isComposite, false, false, reverseAttributeName, null, searchWeight, indexType, null);
+        this(name, dataTypeName, multiplicity, isComposite, false, false, reverseAttributeName, null, searchWeight, indexType, null,false);
     }
 
     public AttributeDefinition(String name, String dataTypeName, Multiplicity multiplicity, boolean isComposite,
                                boolean isUnique, boolean isIndexable, String reverseAttributeName,
                                Map<String, String> options) {
-        this(name, dataTypeName, multiplicity, isComposite, isUnique, isIndexable, reverseAttributeName, options, DEFAULT_SEARCHWEIGHT, null, null);
+        this(name, dataTypeName, multiplicity, isComposite, isUnique, isIndexable, reverseAttributeName, options, DEFAULT_SEARCHWEIGHT, null, null, false);
     }
 
     public AttributeDefinition(String name, String dataTypeName, Multiplicity multiplicity, boolean isComposite,
                                boolean isUnique, boolean isIndexable, String reverseAttributeName,
-                               Map<String, String> options, int searchWeight, AtlasStructDef.AtlasAttributeDef.IndexType indexType, String normalizer) {
+                               Map<String, String> options, int searchWeight, AtlasStructDef.AtlasAttributeDef.IndexType indexType, String normalizer, boolean setupEnhancedSearch) {
         this.name = name;
         this.dataTypeName = dataTypeName;
         this.multiplicity = multiplicity;
@@ -95,6 +96,7 @@ public class AttributeDefinition implements Serializable {
         this.searchWeight = searchWeight;
         this.indexType = indexType;
         this.normalizer = normalizer;
+        this.setupEnhancedSearch = setupEnhancedSearch;
     }
 
 
@@ -229,11 +231,19 @@ public class AttributeDefinition implements Serializable {
         this.normalizer = normalizer;
     }
 
+    public  void setSetupEnhancedSearch(boolean setupEnhancedSearch) {
+        this.setupEnhancedSearch = setupEnhancedSearch;
+    }
+
     public AtlasStructDef.AtlasAttributeDef.IndexType getIndexType() {
         return this.indexType;
     }
 
     public String getNormalizer() {
         return this.normalizer;
+    }
+
+    public boolean getSetupEnhancedSearch() {
+        return this.setupEnhancedSearch;
     }
 }
