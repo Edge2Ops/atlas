@@ -58,6 +58,7 @@ public class SearchParameters implements Serializable {
     private Set<String>    attributes;
     private SortOrder      sortOrder;
     private float minScore;
+    private AttributeRelevance[] attributeRelevances;
 
     public static final String WILDCARD_CLASSIFICATIONS = "*";
     public static final String ALL_CLASSIFICATIONS      = "_CLASSIFIED";
@@ -217,6 +218,13 @@ public class SearchParameters implements Serializable {
     }
 
     /**
+     * @return AttributeRelevances(pagination) of the results
+     */
+    public AttributeRelevance[] getAttributeRelevances() {
+        return attributeRelevances;
+    }
+
+    /**
      * @param offset
      */
     public void setOffset(int offset) {
@@ -301,6 +309,12 @@ public class SearchParameters implements Serializable {
      * @param minScore
      */
     public void setMinScore(float minScore) { this.minScore = minScore; }
+
+    /**
+     * Attribute relevances for search
+     * @param attributeRelevances
+     */
+    public void setMinScore(AttributeRelevance[] attributeRelevances) { this.attributeRelevances = attributeRelevances; }
 
     @Override
     public boolean equals(Object o) {
@@ -444,6 +458,63 @@ public class SearchParameters implements Serializable {
             sb.append(", attributeValue='").append(attributeValue).append('\'');
             sb.append(", condition=").append(condition);
             sb.append(", criterion=").append(criterion);
+            sb.append('}');
+
+            return sb;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+    }
+
+    @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class AttributeRelevance {
+
+        private String   attributeName;
+        private float attributeWeight;
+
+        public String getAttributeName() {
+            return attributeName;
+        }
+
+        public float getAttributeWeight() {
+            return  attributeWeight;
+        }
+
+        public void setAttributeName(String attributeName) {
+            this.attributeName = attributeName;
+        }
+
+        public void setAttributeWeight(float attributeWeight) {
+            this.attributeWeight = attributeWeight;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AttributeRelevance that = (AttributeRelevance) o;
+            return Objects.equals(attributeName, that.attributeName) &&
+                    Objects.equals(attributeWeight, that.attributeWeight);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(attributeName, attributeWeight);
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            if (sb == null) {
+                sb = new StringBuilder();
+            }
+
+            sb.append('{');
+            sb.append("attributeName='").append(attributeName).append('\'');
+            sb.append(", attributeWeight=").append(attributeWeight);
             sb.append('}');
 
             return sb;
