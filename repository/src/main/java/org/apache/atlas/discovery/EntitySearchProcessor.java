@@ -50,11 +50,12 @@ public class EntitySearchProcessor extends SearchProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(EntitySearchProcessor.class);
     private static final Logger PERF_LOG = AtlasPerfTracer.getPerfLogger("EntitySearchProcessor");
 
-    private final AtlasIndexQuery indexQuery;
+    private AtlasIndexQuery indexQuery;
     private final AtlasGraphQuery graphQuery;
     private Predicate graphQueryPredicate;
     private Predicate filterGraphQueryPredicate;
     private SearchSourceBuilder sourceBuilder;
+    private String ESIndexQueryString = null;
 
     public EntitySearchProcessor(SearchContext context) {
         super(context);
@@ -140,6 +141,7 @@ public class EntitySearchProcessor extends SearchProcessor {
                 sortOrder = ASCENDING;
             }
 
+            ESIndexQueryString = indexQueryString;
             esIndexQueryBuilder.constructSearchSource(sourceBuilder, indexQueryString, fullTextQuery, sortBy, sortOrder, context.getSearchParameters().getMinScore(), context.getSearchParameters().getAttributeRelevances());
             this.indexQuery = context.getGraph().esIndexQuery(Constants.VERTEX_INDEX, sourceBuilder);
         } else {
@@ -257,71 +259,80 @@ public class EntitySearchProcessor extends SearchProcessor {
         }
 
         try {
-            final int startIdx = context.getSearchParameters().getOffset();
-            final int limit = context.getSearchParameters().getLimit();
-
-            // when subsequent filtering stages are involved, query should start at 0 even though startIdx can be higher
-            //
-            // first 'startIdx' number of entries will be ignored
-            int qryOffset = (nextProcessor != null || (graphQuery != null && indexQuery != null)) ? 0 : startIdx;
-            int resultIdx = qryOffset;
-
-            final List<AtlasVertex> entityVertices = new ArrayList<>();
-
-            for (; ret.size() < limit; qryOffset += limit) {
-                entityVertices.clear();
-
-                if (context.terminateSearch()) {
-                    LOG.warn("query terminated: {}", context.getSearchParameters());
-
-                    break;
-                }
-
-                final boolean isLastResultPage;
-
-                if (indexQuery != null) {
-                    Iterator<AtlasIndexQuery.Result> idxQueryResult = indexQuery.vertices(qryOffset, limit);
-
-                    getVerticesFromIndexQueryResult(idxQueryResult, entityVertices);
-
-                    isLastResultPage = entityVertices.size() < limit;
-
-                    // Do in-memory filtering before the graph query
-                    CollectionUtils.filter(entityVertices, inMemoryPredicate);
-
-                    if (graphQueryPredicate != null) {
-                        CollectionUtils.filter(entityVertices, graphQueryPredicate);
-                    }
-                } else {
-                    Iterator<AtlasVertex> queryResult = graphQuery.vertices(qryOffset, limit).iterator();
-
-                    getVertices(queryResult, entityVertices);
-
-                    isLastResultPage = entityVertices.size() < limit;
-
-                    // Do in-memory filtering
-                    CollectionUtils.filter(entityVertices, inMemoryPredicate);
-
-                    //incase when operator is NEQ in pipeSeperatedSystemAttributes
-                    if (graphQueryPredicate != null) {
-                        CollectionUtils.filter(entityVertices, graphQueryPredicate);
-                    }
-                }
-
-                super.filter(entityVertices);
-
-                resultIdx = collectResultVertices(ret, startIdx, limit, resultIdx, entityVertices);
-
-                if (isLastResultPage) {
-                    break;
-                }
-            }
+            ret = getResultForQuery();
         } finally {
             AtlasPerfTracer.log(perf);
         }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== EntitySearchProcessor.execute({}): ret.size()={}", context, ret.size());
+        }
+
+        return ret;
+    }
+
+    private List<AtlasVertex> getResultForQuery() {
+
+        final int startIdx = context.getSearchParameters().getOffset();
+        final int limit = context.getSearchParameters().getLimit();
+
+        // when subsequent filtering stages are involved, query should start at 0 even though startIdx can be higher
+        //
+        // first 'startIdx' number of entries will be ignored
+        int qryOffset = (nextProcessor != null || (graphQuery != null && indexQuery != null)) ? 0 : startIdx;
+        int resultIdx = qryOffset;
+
+        List<AtlasVertex> ret = new ArrayList<>();
+
+        final List<AtlasVertex> entityVertices = new ArrayList<>();
+
+        for (; ret.size() < limit; qryOffset += limit) {
+            entityVertices.clear();
+
+            if (context.terminateSearch()) {
+                LOG.warn("query terminated: {}", context.getSearchParameters());
+
+                break;
+            }
+
+            final boolean isLastResultPage;
+
+            if (indexQuery != null) {
+                Iterator<AtlasIndexQuery.Result> idxQueryResult = indexQuery.vertices(qryOffset, limit);
+
+                getVerticesFromIndexQueryResult(idxQueryResult, entityVertices);
+
+                isLastResultPage = entityVertices.size() < limit;
+
+                // Do in-memory filtering before the graph query
+                CollectionUtils.filter(entityVertices, inMemoryPredicate);
+
+                if (graphQueryPredicate != null) {
+                    CollectionUtils.filter(entityVertices, graphQueryPredicate);
+                }
+            } else {
+                Iterator<AtlasVertex> queryResult = graphQuery.vertices(qryOffset, limit).iterator();
+
+                getVertices(queryResult, entityVertices);
+
+                isLastResultPage = entityVertices.size() < limit;
+
+                // Do in-memory filtering
+                CollectionUtils.filter(entityVertices, inMemoryPredicate);
+
+                //incase when operator is NEQ in pipeSeperatedSystemAttributes
+                if (graphQueryPredicate != null) {
+                    CollectionUtils.filter(entityVertices, graphQueryPredicate);
+                }
+            }
+
+            super.filter(entityVertices);
+
+            resultIdx = collectResultVertices(ret, startIdx, limit, resultIdx, entityVertices);
+
+            if (isLastResultPage) {
+                break;
+            }
         }
 
         return ret;
@@ -338,6 +349,47 @@ public class EntitySearchProcessor extends SearchProcessor {
         if (filterGraphQueryPredicate != null) {
             LOG.debug("Filtering in-memory");
             CollectionUtils.filter(entityVertices, filterGraphQueryPredicate);
+        }
+
+        /*
+            FIX: Text searching and sorting is not done by in memory filtering. Do filtering through ES if query text is present or sorting is present.
+            This is right now only for AtlanAsset type
+         */
+        if (context.getSuperTypes().contains(Constants.ATLAN_ASSET_TYPE) && ((context.getSearchParameters().getQuery() != null && context.getSearchParameters().getQuery()!="") || (context.getSearchParameters().getSortBy()!=null && context.getSearchParameters().getSortBy()!=""))) {
+            //Do index query
+            StringBuilder indexQuery = new StringBuilder(ESIndexQueryString);
+
+            Set<String> guidsSet = getGuids(entityVertices);
+            List<String> guids = new ArrayList<>(guidsSet);
+            esIndexQueryBuilder.addGuidFilter(guids,indexQuery);
+
+            String indexQueryString = STRAY_AND_PATTERN.matcher(indexQuery).replaceAll(")");
+
+            indexQueryString = STRAY_OR_PATTERN.matcher(indexQueryString).replaceAll(")");
+            indexQueryString = STRAY_ELIPSIS_PATTERN.matcher(indexQueryString).replaceAll("");
+
+            String sortBy = context.getSearchParameters().getSortBy();
+            SortOrder sortOrder = context.getSearchParameters().getSortOrder();
+            final AtlasEntityType entityType = context.getEntityTypes().iterator().next();
+
+            AtlasAttribute sortByAttribute = entityType.getAttribute(sortBy);
+            if (sortByAttribute == null) {
+                sortBy = null;
+            } else {
+                sortBy = sortByAttribute.getVertexPropertyName();
+            }
+
+            if (sortOrder == null) {
+                sortOrder = ASCENDING;
+            }
+
+            ESIndexQueryString = indexQueryString;
+            esIndexQueryBuilder.constructSearchSource(sourceBuilder, indexQueryString, context.getSearchParameters().getQuery(), sortBy, sortOrder, context.getSearchParameters().getMinScore(), context.getSearchParameters().getAttributeRelevances());
+            this.indexQuery = context.getGraph().esIndexQuery(Constants.VERTEX_INDEX, sourceBuilder);
+
+            List<AtlasVertex> tempList = getResultForQuery();
+            entityVertices.clear();
+            entityVertices.addAll(tempList);
         }
 
         super.filter(entityVertices);

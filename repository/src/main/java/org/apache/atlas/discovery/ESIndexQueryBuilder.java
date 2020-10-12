@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.atlas.discovery.SearchContext.MATCH_ALL_NOT_CLASSIFIED;
 import static org.apache.atlas.discovery.SearchProcessor.*;
@@ -122,6 +123,15 @@ public class ESIndexQueryBuilder {
                 indexQuery.append(" AND ");
             }
             indexQuery.append("(").append(STATE_PROPERTY_KEY).append(":" + "ACTIVE").append(")");
+        }
+    }
+
+    void addGuidFilter(List<String> guids, StringBuilder indexQuery) {
+        if (guids != null && guids.size() > 0) {
+            if (indexQuery.length() != 0) {
+                indexQuery.append(" AND ");
+            }
+            indexQuery.append("(").append(GUID_PROPERTY_KEY).append(": ("+String.join(",",guids.stream().map(guid -> ("\""+guid+"\"")).collect(Collectors.toList()))+")").append(")");
         }
     }
 

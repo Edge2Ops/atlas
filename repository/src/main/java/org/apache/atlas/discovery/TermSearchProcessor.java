@@ -17,6 +17,7 @@
  */
 package org.apache.atlas.discovery;
 
+import org.apache.atlas.repository.Constants;
 import org.apache.atlas.repository.graphdb.AtlasVertex;
 import org.apache.atlas.utils.AtlasPerfTracer;
 import org.apache.commons.collections.CollectionUtils;
@@ -65,7 +66,13 @@ public class TermSearchProcessor extends SearchProcessor {
 
                 super.filter(tmpList);
 
-                collectResultVertices(ret, startIdx, limit, 0, tmpList);
+                //Don't apply limit skip in case of query text filter or sort by name.
+                if (context.getSuperTypes().contains(Constants.ATLAN_ASSET_TYPE) && ((context.getSearchParameters().getQuery() != null && context.getSearchParameters().getQuery()!="") || (context.getSearchParameters().getSortBy()!=null && context.getSearchParameters().getSortBy()!=""))) {
+                    ret.addAll(tmpList);
+                } else {
+                    collectResultVertices(ret, startIdx, limit, 0, tmpList);
+                }
+
             }
         } finally {
             AtlasPerfTracer.log(perf);
