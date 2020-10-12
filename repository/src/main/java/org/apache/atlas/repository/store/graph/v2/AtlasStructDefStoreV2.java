@@ -652,8 +652,13 @@ public class AtlasStructDefStoreV2 extends AtlasAbstractDefStoreV2<AtlasStructDe
             ret.setNormalizer(normalizer);
         }
 
-        boolean setupEnhancedSearch = (boolean) attribInfo.get("setupEnhancedSearch");
-        ret.setSetupEnhancedSearch(setupEnhancedSearch);
+        try {
+            boolean setupEnhancedSearch = (boolean) attribInfo.get("setupEnhancedSearch");
+            ret.setSetupEnhancedSearch(setupEnhancedSearch);
+        } catch (Exception e) {
+            LOG.info("Exception occurred: "+ e.toString());
+            ret.setSetupEnhancedSearch(false);
+        }
 
         return ret;
     }
