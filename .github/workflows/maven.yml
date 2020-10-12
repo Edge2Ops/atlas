@@ -23,6 +23,7 @@ on:
     branches:
       - master
       - poc
+      - trial
 
 jobs:
   build:
