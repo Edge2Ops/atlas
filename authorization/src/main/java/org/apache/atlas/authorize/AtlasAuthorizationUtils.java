@@ -242,6 +242,11 @@ public class AtlasAuthorizationUtils {
             System.out.println(e);
         }
 
+        // If realm exists, the token is of an Apikey service account, prepend realm.
+        if (realm != "" && auth != null && !auth.getName().startsWith("service-account-apikey")) {
+            return auth != null ? realm + "_" + auth.getName() : "";
+        }
+
         // If realm exists, the token is not of a service account, prepend realm.
         if (realm != "" && auth != null && !auth.getName().startsWith("service-account-")) {
             return auth != null ? realm + "_" + auth.getName() : "";
