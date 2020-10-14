@@ -70,8 +70,6 @@
           "isIndexable": true,
           "isOptional": false,
           "isUnique": false,
-          "indexType": "STRING",
-          "normalizer": "lowerasciinormalizer",
           "setupEnhancedSearch": true
         },
         {
@@ -81,7 +79,7 @@
           "isIndexable": true,
           "isOptional": true,
           "isUnique": false,
-          "indexType": "STRING"
+          "setupEnhancedSearch": true
         },
         {
           "name": "description",

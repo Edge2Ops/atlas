@@ -190,7 +190,56 @@ public final class Atlas {
         }
 
         PutIndexTemplateRequest indexTemplateRequest = new PutIndexTemplateRequest("atlan_template");
-        indexTemplateRequest.source("{\r\n  \"index_patterns\": [\r\n    \"*janusgraph*\"\r\n  ],\r\n  \"settings\": {\r\n    \"analysis\": {\r\n      \"normalizer\": {\r\n        \"lowerasciinormalizer\": {\r\n          \"type\": \"custom\",\r\n          \"filter\": [\r\n            \"lowercase\",\r\n            \"asciifolding\"\r\n          ]\r\n        }\r\n      },\r\n      \"filter\": {\r\n        \"clean_with_spaces\": {\r\n          \"pattern\": \"(-|_)\",\r\n          \"type\": \"pattern_replace\",\r\n          \"replacement\": \" \"\r\n        }\r\n      },\r\n      \"analyzer\": {\r\n        \"english_exact_cleaned\": {\r\n          \"filter\": [\r\n            \"lowercase\",\r\n            \"clean_with_spaces\"\r\n          ],\r\n          \"tokenizer\": \"keyword\"\r\n        },\r\n        \"ignore_sepcial_characters\": {\r\n          \"filter\": [\r\n            \"lowercase\"\r\n          ],\r\n          \"tokenizer\": \"special_tokenizer\"\r\n        },\r\n        \"folding\": {\r\n          \"filter\": [\r\n            \"lowercase\",\r\n            \"asciifolding\"\r\n          ],\r\n          \"tokenizer\": \"standard\"\r\n        },\r\n        \"ngram_analyzer\": {\r\n          \"filter\": [\r\n            \"lowercase\"\r\n          ],\r\n          \"tokenizer\": \"ngram_tokenizer\"\r\n        }\r\n      },\r\n      \"tokenizer\": {\r\n        \"special_tokenizer\": {\r\n          \"pattern\": \"( |_|-)\",\r\n          \"type\": \"pattern\"\r\n        },\r\n        \"ngram_tokenizer\": {\r\n          \"type\": \"ngram\",\r\n          \"min_gram\": 3,\r\n          \"max_gram\": 4,\r\n          \"token_chars\": [\r\n            \"letter\",\r\n            \"digit\"\r\n          ]\r\n        }\r\n      }\r\n    }\r\n  }\r\n}", XContentType.JSON);
+        indexTemplateRequest.source("{\n" +
+                "  \"index_patterns\": [\n" +
+                "    \"*janusgraph*\"\n" +
+                "  ],\n" +
+                "  \"settings\": {\n" +
+                "    \"analysis\": {\n" +
+                "      \"normalizer\": {\n" +
+                "        \"lowerasciinormalizer\": {\n" +
+                "          \"type\": \"custom\",\n" +
+                "          \"filter\": [\n" +
+                "            \"lowercase\",\n" +
+                "            \"asciifolding\"\n" +
+                "          ]\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"filter\": {\n" +
+                "        \"clean_with_spaces\": {\n" +
+                "          \"pattern\": \"(-|_)\",\n" +
+                "          \"type\": \"pattern_replace\",\n" +
+                "          \"replacement\": \" \"\n" +
+                "        },\n" +
+                "        \"snowball_english\": {\n" +
+                "          \"type\": \"snowball\",\n" +
+                "          \"language\": \"English\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"analyzer\": {\n" +
+                "        \"ignore_sepcial_characters\": {\n" +
+                "          \"filter\": [\n" +
+                "            \"lowercase\"\n" +
+                "          ],\n" +
+                "          \"tokenizer\": \"special_tokenizer\"\n" +
+                "        },\n" +
+                "        \"snowball_analyzer\": {\n" +
+                "          \"filter\": [\n" +
+                "            \"lowercase\",\n" +
+                "            \"snowball_english\"\n" +
+                "          ],\n" +
+                "          \"tokenizer\": \"special_tokenizer\"\n" +
+                "        }\n" +
+                "      },\n" +
+                "      \"tokenizer\": {\n" +
+                "        \"special_tokenizer\": {\n" +
+                "          \"pattern\": \"( |_|-)\",\n" +
+                "          \"type\": \"pattern\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", XContentType.JSON);
 
         try {
             AcknowledgedResponse putTemplateResponse = esClient.indices().putTemplate(indexTemplateRequest, RequestOptions.DEFAULT);

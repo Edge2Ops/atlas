@@ -1028,7 +1028,16 @@ public abstract class SearchProcessor {
     protected Collection<AtlasVertex> getVerticesFromIndexQueryResult(Iterator<AtlasIndexQuery.Result> idxQueryResult, Collection<AtlasVertex> vertices) {
         if (idxQueryResult != null) {
             while (idxQueryResult.hasNext()) {
-                AtlasVertex vertex = idxQueryResult.next().getVertex();
+
+                AtlasIndexQuery.Result nextResult = idxQueryResult.next();
+
+                AtlasVertex vertex = nextResult.getVertex();
+
+                if (vertex.getProperty("indexSearchScore",Double.class) != null) {
+                    vertex.removeProperty("indexSearchScore");
+                }
+
+                vertex.addProperty("indexSearchScore",nextResult.getScore());
 
                 vertices.add(vertex);
             }

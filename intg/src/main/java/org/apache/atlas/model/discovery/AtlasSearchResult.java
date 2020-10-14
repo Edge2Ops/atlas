@@ -30,18 +30,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
 
 @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = false)
 public class AtlasSearchResult implements Serializable {
     private AtlasQueryType                 queryType;
     private SearchParameters               searchParameters;
@@ -49,6 +45,7 @@ public class AtlasSearchResult implements Serializable {
     private String                         type;
     private String                         classification;
     private List<AtlasEntityHeader>        entities;
+    private Map<String,Float> searchScore;
     private AttributeSearchResult          attributes;
     private List<AtlasFullTextResult>      fullTextResult;
     private Map<String, AtlasEntityHeader> referredEntities;
@@ -131,6 +128,14 @@ public class AtlasSearchResult implements Serializable {
 
     public void setApproximateCount(long approximateCount) { this.approximateCount = approximateCount; }
 
+    public Map<String, Float> getSearchScore() {
+        return searchScore;
+    }
+
+    public void setSearchScore(HashMap<String,Float> searchScore) {
+        this.searchScore = searchScore;
+    }
+
     @Override
     public int hashCode() { return Objects.hash(queryType, searchParameters, queryText, type, classification, entities, attributes, fullTextResult, referredEntities); }
 
@@ -161,6 +166,15 @@ public class AtlasSearchResult implements Serializable {
             removeEntity(newEntity);
             entities.add(newEntity);
         }
+    }
+
+    public void addEntityScore(String entityGuid, Float score) {
+
+        if (searchScore == null) {
+            searchScore = new HashMap<String, Float>();
+        }
+
+        searchScore.put(entityGuid,score);
     }
 
     public void removeEntity(AtlasEntityHeader entity) {
