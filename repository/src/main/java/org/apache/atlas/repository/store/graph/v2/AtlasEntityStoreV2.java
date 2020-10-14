@@ -168,6 +168,26 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
         return ret;
     }
 
+    public AtlasEntityWithExtInfo getByIdWithoutVerifyAccess(final String guid, final boolean isMinExtInfo, boolean ignoreRelationships) throws AtlasBaseException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getByIdWithoutVerifyAccess({}, {})", guid, isMinExtInfo);
+        }
+
+        EntityGraphRetriever entityRetriever = new EntityGraphRetriever(graph, typeRegistry, ignoreRelationships);
+
+        AtlasEntityWithExtInfo ret = entityRetriever.toAtlasEntityWithExtInfo(guid, isMinExtInfo);
+
+        if (ret == null) {
+            throw new AtlasBaseException(AtlasErrorCode.INSTANCE_GUID_NOT_FOUND, guid);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getByIdWithoutVerifyAccess({}, {}): {}", guid, isMinExtInfo, ret);
+        }
+
+        return ret;
+    }
+
     @Override
     @GraphTransaction
     public AtlasEntityHeader getHeaderById(final String guid) throws AtlasBaseException {

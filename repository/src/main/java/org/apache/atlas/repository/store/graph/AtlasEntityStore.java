@@ -67,6 +67,15 @@ public interface AtlasEntityStore {
     AtlasEntityWithExtInfo getById(String guid, boolean isMinExtInfo, boolean ignoreRelationships) throws AtlasBaseException;
 
     /**
+     *
+     * Get entity definition by its guid without verifying access
+     * @param guid
+     * @param isMinExtInfo
+     * @return AtlasEntity
+     */
+    AtlasEntityWithExtInfo getByIdWithoutVerifyAccess(String guid, boolean isMinExtInfo, boolean ignoreRelationships) throws AtlasBaseException;
+
+    /**
      * Get entity header for the given GUID
      * @param guid
      * @return

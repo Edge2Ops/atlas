@@ -151,11 +151,20 @@ public class EntityREST {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "EntityREST.evaluatePolicies()");
             }
 
+            Map<String, AtlasEntityWithExtInfo> entityMemoization = new HashMap<>();
+
             for (int i=0; i < entities.size(); i++) {
                 try {
-                    AtlasEntity entity = new AtlasEntity();
-                    entity.setGuid(entities.get(i).getEntityGuid());
-                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entity), false));
+                    AtlasEntityWithExtInfo entity = null;
+
+                    if (entityMemoization.get(entities.get(i).getEntityGuid()) != null) {
+                        entity = entityMemoization.get(entities.get(i).getEntityGuid());
+                    } else {
+                        entity = entitiesStore.getByIdWithoutVerifyAccess(entities.get(i).getEntityGuid(), true, true);
+                        entityMemoization.put(entities.get(i).getEntityGuid(), entity);
+                    }
+
+                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.valueOf(entities.get(i).getAction()), new AtlasEntityHeader(entity.getEntity()), false));
                     response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), true));
                 } catch (AtlasBaseException e) {
                     response.add(new AtlasEvaluatePolicyResponse(entities.get(i).getTypeName(), entities.get(i).getEntityGuid(), entities.get(i).getAction(), false));
