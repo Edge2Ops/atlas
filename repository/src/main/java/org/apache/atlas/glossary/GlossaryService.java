@@ -30,6 +30,7 @@ import org.apache.atlas.model.glossary.AtlasGlossaryTerm;
 import org.apache.atlas.model.glossary.relations.AtlasRelatedCategoryHeader;
 import org.apache.atlas.model.glossary.relations.AtlasRelatedTermHeader;
 import org.apache.atlas.model.glossary.relations.AtlasTermCategorizationHeader;
+import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.atlas.model.instance.AtlasRelatedObjectId;
 import org.apache.atlas.repository.Constants;
 import org.apache.atlas.repository.graph.AtlasGraphProvider;
@@ -820,8 +821,15 @@ public class GlossaryService {
             LOG.debug("==> GlossaryService.getCategoryTermsHeaders({}, {}, {}, {})", categoryGuid, offset, limit, sortOrder);
         }
 
+        AtlasGlossaryCategory atlasGlossaryCategory = getAtlasGlossaryCategorySkeleton(categoryGuid);
+        AtlasGlossaryCategory category = dataAccess.load(atlasGlossaryCategory);
+
+        AtlasEntityHeader entityHeader = GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(categoryGuid);
+        entityHeader.setAttribute(QUALIFIED_NAME_ATTR, category.getQualifiedName());
+        entityHeader.setAttribute(NAME, category.getName());
+
         AtlasAuthorizationUtils.verifyAccess(
-                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, GlossaryUtils.getAtlasCategoryEntityHeaderSkeleton(categoryGuid)));
+                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, entityHeader));
 
         List<AtlasRelatedTermHeader> ret = new ArrayList<>();
         AtlasGraph<Object, Object> graph = AtlasGraphProvider.getGraphInstance();
@@ -850,8 +858,15 @@ public class GlossaryService {
             LOG.debug("==> GlossaryService.getCategoryTermsHeadersF({}, {}, {}, {})", categoryGuid, offset, limit, sortOrder);
         }
 
+        AtlasGlossaryCategory atlasGlossaryCategory = getAtlasGlossaryCategorySkeleton(categoryGuid);
+        AtlasGlossaryCategory category = dataAccess.load(atlasGlossaryCategory);
+
+        AtlasEntityHeader entityHeader = GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(categoryGuid);
+        entityHeader.setAttribute(QUALIFIED_NAME_ATTR, category.getQualifiedName());
+        entityHeader.setAttribute(NAME, category.getName());
+
         AtlasAuthorizationUtils.verifyAccess(
-                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, GlossaryUtils.getAtlasCategoryEntityHeaderSkeleton(categoryGuid)));
+                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, entityHeader));
 
         List<AtlasGlossaryTerm> ret = new ArrayList<>();
         List<AtlasRelatedTermHeader> termHeaders = new ArrayList<>();
@@ -885,8 +900,15 @@ public class GlossaryService {
             LOG.debug("==> GlossaryService.getGlossaryTermsHeaders({}, {}, {}, {}, {})", glossaryGuid, offset, limit, sortOrder, isRoot);
         }
 
+        AtlasGlossary atlasGlossary = getGlossarySkeleton(glossaryGuid);
+        AtlasGlossary glossary = dataAccess.load(atlasGlossary);
+
+        AtlasEntityHeader entityHeader = GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid);
+        entityHeader.setAttribute(QUALIFIED_NAME_ATTR, glossary.getQualifiedName());
+        entityHeader.setAttribute(NAME, glossary.getName());
+
         AtlasAuthorizationUtils.verifyAccess(
-                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid)));
+                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, entityHeader));
 
         List<AtlasRelatedTermHeader> ret = new ArrayList<>();
         AtlasGraph<Object, Object> graph = AtlasGraphProvider.getGraphInstance();
@@ -919,8 +941,15 @@ public class GlossaryService {
             LOG.debug("==> GlossaryService.getGlossaryTermsOptimized({}, {}, {}, {}, {})", glossaryGuid, offset, limit, sortOrder, isRoot);
         }
 
+        AtlasGlossary atlasGlossary = getGlossarySkeleton(glossaryGuid);
+        AtlasGlossary glossary = dataAccess.load(atlasGlossary);
+
+        AtlasEntityHeader entityHeader = GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid);
+        entityHeader.setAttribute(QUALIFIED_NAME_ATTR, glossary.getQualifiedName());
+        entityHeader.setAttribute(NAME, glossary.getName());
+
         AtlasAuthorizationUtils.verifyAccess(
-                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid)));
+                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, entityHeader));
 
         List<AtlasGlossaryTerm> ret = new ArrayList<>();
         List<AtlasRelatedTermHeader> termHeaders = new ArrayList<>();
@@ -982,8 +1011,15 @@ public class GlossaryService {
             LOG.debug("==> GlossaryService.getGlossaryCategoriesHeadersOptimized({}, {}, {}, {})", glossaryGuid, offset, limit, sortOrder);
         }
 
+        AtlasGlossary atlasGlossary = getGlossarySkeleton(glossaryGuid);
+        AtlasGlossary glossary = dataAccess.load(atlasGlossary);
+
+        AtlasEntityHeader entityHeader = GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid);
+        entityHeader.setAttribute(QUALIFIED_NAME_ATTR, glossary.getQualifiedName());
+        entityHeader.setAttribute(NAME, glossary.getName());
+
         AtlasAuthorizationUtils.verifyAccess(
-                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, GlossaryUtils.getAtlasGlossaryEntityHeaderSkeleton(glossaryGuid)));
+                new AtlasEntityAccessRequest(atlasTypeRegistry, AtlasPrivilege.ENTITY_READ, entityHeader));
 
         List<AtlasRelatedCategoryHeader> ret = new ArrayList<>();
         AtlasGraph<Object, Object> graph = AtlasGraphProvider.getGraphInstance();
