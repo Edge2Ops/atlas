@@ -37,6 +37,7 @@ import org.apache.atlas.utils.AtlasPerfTracer;
 import org.apache.atlas.web.util.Servlets;
 import org.apache.http.annotation.Experimental;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.elasticsearch.client.graph.Vertex;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphVertex;
 import org.janusgraph.graphdb.database.management.ManagementSystem;
@@ -493,7 +494,7 @@ public class TypesREST {
 
                 vertex.property(toName,previousPropertyValue);
 
-                atlasJanusGraph.commit();
+                vertex.graph().commit();
                 start++;
 
                 if (start%batchSize==0) {
@@ -501,8 +502,6 @@ public class TypesREST {
                 }
                 PERF_LOG.info("Migrated value for vertex: ");
             }
-
-            atlasJanusGraph.commit();
 
             PERF_LOG.info("NO MORE VALUES TO MIGRATE!!");
 
