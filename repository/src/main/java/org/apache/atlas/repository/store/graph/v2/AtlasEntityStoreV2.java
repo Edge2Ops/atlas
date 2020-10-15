@@ -243,25 +243,38 @@ public class AtlasEntityStoreV2 implements AtlasEntityStore {
     @Override
     @GraphTransaction
     public AtlasEntitiesWithExtInfo getByIds(List<String> guids, boolean isMinExtInfo, boolean ignoreRelationships) throws AtlasBaseException {
-        return getByIds(guids,isMinExtInfo,ignoreRelationships,false);
+        return getByIds(guids,isMinExtInfo,ignoreRelationships,false, false);
     }
 
     @GraphTransaction
-    public AtlasEntitiesWithExtInfo getByIds(List<String> guids, boolean isMinExtInfo, boolean ignoreRelationships,boolean ignoreNotFoundException) throws AtlasBaseException {
+    public AtlasEntitiesWithExtInfo getByIds(List<String> guids, boolean isMinExtInfo, boolean ignoreRelationships,boolean ignoreNotFound, boolean ignoreNotAllowed) throws AtlasBaseException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getByIds({}, {})", guids, isMinExtInfo);
         }
 
         EntityGraphRetriever entityRetriever = new EntityGraphRetriever(graph, typeRegistry, ignoreRelationships);
 
-        AtlasEntitiesWithExtInfo ret = entityRetriever.toAtlasEntitiesWithExtInfo(guids, isMinExtInfo, ignoreNotFoundException);
+        AtlasEntitiesWithExtInfo ret = entityRetriever.toAtlasEntitiesWithExtInfo(guids, isMinExtInfo, ignoreNotFound);
 
         if(ret != null){
             for(String guid : guids){
                 AtlasEntity entity = ret.getEntity(guid);
 
                 if (entity != null) {
-                    AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.ENTITY_READ, new AtlasEntityHeader(entity)), "read entity: guid=", guid);
+                    try {
+                        AtlasAuthorizationUtils.verifyAccess(new AtlasEntityAccessRequest(typeRegistry, AtlasPrivilege.ENTITY_READ, new AtlasEntityHeader(entity)), "read entity: guid=", guid);
+                    } catch (AtlasBaseException e){
+                        if (ignoreNotAllowed) {
+                            if (e.getAtlasErrorCode() == AtlasErrorCode.UNAUTHORIZED_ACCESS) {
+                                //Remove entity from response
+                                ret.removeEntity(ret.getEntity(guid));
+                            } else {
+                                throw e;
+                            }
+                        } else {
+                            throw e;
+                        }
+                    }
                 }
             }
         }

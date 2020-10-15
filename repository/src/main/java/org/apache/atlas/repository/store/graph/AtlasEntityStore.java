@@ -102,7 +102,7 @@ public interface AtlasEntityStore {
      * @return
      * @throws AtlasBaseException
      */
-    AtlasEntitiesWithExtInfo getByIds(List<String> guid, boolean isMinExtInfo, boolean ignoreRelationships, boolean ignoreNotFoundException) throws AtlasBaseException;
+    AtlasEntitiesWithExtInfo getByIds(List<String> guid, boolean isMinExtInfo, boolean ignoreRelationships, boolean ignoreNotFound, boolean ignoreNotAllowed ) throws AtlasBaseException;
 
     /**
      * Batch GET to retrieve entities by their uniqueIds
@@ -306,5 +306,5 @@ public interface AtlasEntityStore {
 
     List<AtlasEntityHeader> getHeadersById(List<String> guids) throws AtlasBaseException;
 
-    List<AtlasEntityHeader> getHeadersById(List<String> guids, boolean ignoreNotFoundException) throws AtlasBaseException;
+    List<AtlasEntityHeader> getHeadersById(List<String> guids, boolean ignoreNotFound) throws AtlasBaseException;
 }
