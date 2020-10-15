@@ -1033,12 +1033,6 @@ public abstract class SearchProcessor {
 
                 AtlasVertex vertex = nextResult.getVertex();
 
-                if (vertex.getProperty("indexSearchScore",Double.class) != null) {
-                    vertex.removeProperty("indexSearchScore");
-                }
-
-                vertex.addProperty("indexSearchScore",nextResult.getScore());
-
                 vertices.add(vertex);
             }
         }

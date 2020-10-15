@@ -518,9 +518,6 @@ public class EntityDiscoveryService implements AtlasDiscoveryService {
                 }
 
                 ret.addEntity(entity);
-                if (atlasVertex.getProperty("indexSearchScore",Double.class)!=null) {
-                    ret.addEntityScore(entity.getGuid(),atlasVertex.getProperty("indexSearchScore",Double.class).floatValue());
-                }
 
                 // populate ret.referredEntities
                 for (String entityAttribute : entityAttributes) {
