@@ -18,6 +18,7 @@
 package org.apache.atlas.glossary;
 
 import org.apache.atlas.AtlasErrorCode;
+import org.apache.atlas.authorize.AtlasAuthorizationUtils;
 import org.apache.atlas.exception.AtlasBaseException;
 import org.apache.atlas.model.glossary.AtlasGlossary;
 import org.apache.atlas.model.glossary.AtlasGlossaryCategory;
@@ -532,7 +533,7 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
 
         for (AtlasRelatedCategoryHeader childCategoryHeader : childCategories) {
             AtlasGlossaryCategory child           = dataAccess.load(getAtlasGlossaryCategorySkeleton(childCategoryHeader.getCategoryGuid()));
-            String                qualifiedName   = child.getName() + ".";
+            String                qualifiedName   = AtlasAuthorizationUtils.getCurrentUserRealm() + "/" + child.getName() + ".";
             String                childAnchorGuid = child.getAnchor().getGlossaryGuid();
             if (isParentRemoved) {
                 if (LOG.isDebugEnabled()) {
