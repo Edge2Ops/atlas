@@ -186,7 +186,7 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
         // New parent added, qualifiedName needs recomputation
         // Derive the qualifiedName of the Glossary
         AtlasGlossaryCategory parentCategory = dataAccess.load(getAtlasGlossaryCategorySkeleton(newParent.getCategoryGuid()));
-        storeObject.setQualifiedName(storeObject.getName() + "." + parentCategory.getQualifiedName());
+        storeObject.setQualifiedName(AtlasAuthorizationUtils.getCurrentUserRealm() + "/" + storeObject.getName() + "." + parentCategory.getQualifiedName());
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Derived qualifiedName = {}", storeObject.getQualifiedName());
