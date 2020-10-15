@@ -18,14 +18,29 @@
 package org.apache.atlas.web.rest;
 
 import org.apache.atlas.exception.AtlasBaseException;
+import org.apache.atlas.listener.TypeDefChangeListener;
 import org.apache.atlas.model.SearchFilter;
 import org.apache.atlas.model.typedef.*;
+import org.apache.atlas.repository.graph.AtlasGraphProvider;
+import org.apache.atlas.repository.graph.GraphBackedSearchIndexer;
+import org.apache.atlas.repository.graphdb.AtlasGraph;
+import org.apache.atlas.repository.graphdb.AtlasVertex;
+import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraph;
+import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphDatabase;
+import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphManagement;
+import org.apache.atlas.repository.store.graph.v2.AtlasTypeDefGraphStoreV2;
 import org.apache.atlas.repository.util.FilterUtil;
 import org.apache.atlas.store.AtlasTypeDefStore;
+import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.atlas.type.AtlasTypeUtil;
 import org.apache.atlas.utils.AtlasPerfTracer;
 import org.apache.atlas.web.util.Servlets;
 import org.apache.http.annotation.Experimental;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.janusgraph.core.JanusGraph;
+import org.janusgraph.core.JanusGraphVertex;
+import org.janusgraph.graphdb.database.management.ManagementSystem;
+import org.janusgraph.graphdb.vertices.CacheVertex;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +50,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -444,6 +461,57 @@ public class TypesREST {
             AtlasPerfTracer.log(perf);
         }
     }
+
+    /**
+     * Fix typedef's property name and value
+     *
+     * @throws AtlasBaseException
+     * @HTTP 204 On successful deletion of the requested type definitions
+     * @HTTP 400 On validation failure for any type definitions
+     */
+    @POST
+    @Path("/typedef/fixvertexproperty")
+    public void fixVertexProperties(@QueryParam("from") String fromName, @QueryParam("to") String toName) throws AtlasBaseException {
+        AtlasPerfTracer perf = null;
+
+        try {
+            if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "TypesREST.fixVertexProperties(" + fromName + ","+toName+")");
+            }
+
+
+            AtlasJanusGraph atlasJanusGraph = new AtlasJanusGraph();
+
+            int batchSize = 500;
+            int start = 0;
+
+            Iterator it = atlasJanusGraph.V().has(fromName).hasNot(toName).skip(start).limit(batchSize).toList().iterator();
+            while (it.hasNext()) {
+                CacheVertex vertex = (CacheVertex) it.next();
+
+                String previousPropertyValue = vertex.value(fromName).toString();
+
+                vertex.property(toName,previousPropertyValue);
+
+                atlasJanusGraph.commit();
+                start++;
+
+                if (start%batchSize==0) {
+                    it = atlasJanusGraph.V().has(fromName).hasNot(toName).skip(start).limit(batchSize).toList().iterator();
+                }
+                PERF_LOG.info("Migrated value for vertex: ");
+            }
+
+            atlasJanusGraph.commit();
+
+            PERF_LOG.info("NO MORE VALUES TO MIGRATE!!");
+
+        } finally {
+            AtlasPerfTracer.log(perf);
+        }
+    }
+
+
 
     /**
      * Populate a SearchFilter on the basis of the Query Parameters
