@@ -599,6 +599,8 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
             }
         }
 
+        String realm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
         for (String[] record : fileData) {
             AtlasGlossaryCategory glossaryCategory = new AtlasGlossaryCategory();
 
@@ -614,7 +616,7 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
                 glossaryGuid = glossaryNameCache.get(glossaryName);
 
             } else {
-                AtlasVertex vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, GlossaryUtils.ATLAS_GLOSSARY_TYPENAME + "." + QUALIFIED_NAME_ATTR, glossaryName);
+                AtlasVertex vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, GlossaryUtils.ATLAS_GLOSSARY_TYPENAME + "." + QUALIFIED_NAME_ATTR, realm + "/" + glossaryName);
 
                 glossaryGuid = (vertex != null) ? AtlasGraphUtilsV2.getIdFromVertex(vertex) : null;
             }
@@ -625,9 +627,9 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
                     failedTermMsgs.add("The provided Glossary Name is invalid : " + glossaryName);
                 } else {
                     AtlasGlossary glossary = new AtlasGlossary();
-                    glossary.setQualifiedName(glossaryName);
+                    glossary.setQualifiedName(realm + "/" + glossaryName);
                     glossary.setName(glossaryName);
-
+                    glossary.setTenant(realm);
                     glossary = dataAccess.save(glossary);
                     glossaryGuid = glossary.getGuid();
                 }
@@ -636,6 +638,7 @@ public class GlossaryCategoryUtils extends GlossaryUtils {
             if (glossaryGuid != null) {
                 glossaryNameCache.put(glossaryName, glossaryGuid);
                 glossaryCategory = populateGlossaryCategoryObject(failedTermMsgs, record, glossaryGuid);
+                glossaryCategory.setTenant(realm);
                 glossaryCategories.add(glossaryCategory);
             }
         }

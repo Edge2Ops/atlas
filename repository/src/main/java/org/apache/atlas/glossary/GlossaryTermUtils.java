@@ -18,6 +18,7 @@
 package org.apache.atlas.glossary;
 
 import org.apache.atlas.AtlasErrorCode;
+import org.apache.atlas.authorize.AtlasAuthorizationUtils;
 import org.apache.atlas.exception.AtlasBaseException;
 import org.apache.atlas.model.glossary.AtlasGlossary;
 import org.apache.atlas.model.glossary.AtlasGlossaryTerm;
@@ -551,11 +552,13 @@ public class GlossaryTermUtils extends GlossaryUtils {
             String glossaryName = record[0];
             String glossaryGuid;
 
+            String realm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
             if (glossaryNameCache.get(glossaryName) != null) {
                 glossaryGuid = glossaryNameCache.get(glossaryName);
 
             } else {
-                AtlasVertex vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, GlossaryUtils.ATLAS_GLOSSARY_TYPENAME + "." + QUALIFIED_NAME_ATTR, glossaryName);
+                AtlasVertex vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, GlossaryUtils.ATLAS_GLOSSARY_TYPENAME + "." + QUALIFIED_NAME_ATTR, realm + "/" + glossaryName);
 
                 glossaryGuid = (vertex != null) ? AtlasGraphUtilsV2.getIdFromVertex(vertex) : null;
             }
@@ -566,8 +569,9 @@ public class GlossaryTermUtils extends GlossaryUtils {
                     failedTermMsgs.add("The provided Glossary Name is invalid : " + glossaryName);
                 } else {
                     AtlasGlossary glossary = new AtlasGlossary();
-                    glossary.setQualifiedName(glossaryName);
+                    glossary.setQualifiedName(realm + "/" + glossaryName);
                     glossary.setName(glossaryName);
+                    glossary.setTenant(realm);
 
                     glossary      = dataAccess.save(glossary);
                     glossaryGuid  = glossary.getGuid();
@@ -577,6 +581,7 @@ public class GlossaryTermUtils extends GlossaryUtils {
             if (glossaryGuid != null) {
                 glossaryNameCache.put(glossaryName, glossaryGuid);
                 glossaryTerm = populateGlossaryTermObject(failedTermMsgs, record, glossaryGuid);
+                glossaryTerm.setTenant(realm);
                 glossaryTerms.add(glossaryTerm);
             }
         }
@@ -613,11 +618,13 @@ public class GlossaryTermUtils extends GlossaryUtils {
             String glossaryName = record[0];
             String glossaryGuid;
 
+            String realm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
             if (glossaryNameCache.get(glossaryName) != null) {
                 glossaryGuid = glossaryNameCache.get(glossaryName);
 
             } else {
-                AtlasVertex vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, GlossaryUtils.ATLAS_GLOSSARY_TYPENAME + "." + QUALIFIED_NAME_ATTR, glossaryName);
+                AtlasVertex vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TYPENAME, GlossaryUtils.ATLAS_GLOSSARY_TYPENAME + "." + QUALIFIED_NAME_ATTR, realm + "/" + glossaryName);
 
                 glossaryGuid = (vertex != null) ? AtlasGraphUtilsV2.getIdFromVertex(vertex) : null;
             }
@@ -628,8 +635,9 @@ public class GlossaryTermUtils extends GlossaryUtils {
                     failedTermMsgs.add("The provided Glossary Name is invalid : " + glossaryName);
                 } else {
                     AtlasGlossary glossary = new AtlasGlossary();
-                    glossary.setQualifiedName(glossaryName);
+                    glossary.setQualifiedName(realm + "/" + glossaryName);
                     glossary.setName(glossaryName);
+                    glossary.setTenant(realm);
 
                     glossary      = dataAccess.save(glossary);
                     glossaryGuid  = glossary.getGuid();
@@ -639,6 +647,7 @@ public class GlossaryTermUtils extends GlossaryUtils {
             if (glossaryGuid != null) {
                 glossaryNameCache.put(glossaryName, glossaryGuid);
                 glossaryTerm = populateGlossaryTermEntitiesObject(failedTermMsgs, record, glossaryName, glossaryGuid);
+                glossaryTerm.setTenant(realm);
                 glossaryTerms.add(glossaryTerm);
             }
         }
@@ -730,13 +739,15 @@ public class GlossaryTermUtils extends GlossaryUtils {
             String                 csvRecordArray[] = csvRecord.split(FileUtils.ESCAPE_CHARACTER + FileUtils.PIPE_CHARACTER);
             AtlasRelatedTermHeader relatedTermHeader;
 
+            String realm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
             for (String data : csvRecordArray) {
                 AtlasVertex vertex      = null;
                 String      dataArray[] = data.split(FileUtils.ESCAPE_CHARACTER + FileUtils.COLON_CHARACTER);
 
                 if ((dataArray.length % 2) == 0) {
                     vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_TERM_TYPENAME,
-                            GlossaryUtils.ATLAS_GLOSSARY_TERM_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[1] + invalidNameChars[0] + dataArray[0]);
+                            GlossaryUtils.ATLAS_GLOSSARY_TERM_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, realm + "/" + dataArray[1] + invalidNameChars[0] + realm + "/" + dataArray[0]);
                 } else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Term does not exist : " +termName);
                 }
@@ -833,16 +844,18 @@ public class GlossaryTermUtils extends GlossaryUtils {
             String                 csvRecordArray[] = csvRecord.split(FileUtils.ESCAPE_CHARACTER + FileUtils.PIPE_CHARACTER);
             AtlasTermCategorizationHeader termCategoryHeader;
 
+            String realm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
             for (String data : csvRecordArray) {
                 AtlasVertex vertex      = null;
                 String      dataArray[] = data.split(FileUtils.ESCAPE_CHARACTER + FileUtils.COLON_CHARACTER);
 
                 if (dataArray.length == 1) {
                     vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME,
-                            GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[0] + invalidNameChars[0] + glossaryName);
+                            GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, realm + "/" + dataArray[0] + invalidNameChars[0] + realm + "/" + glossaryName);
                 } else if ((dataArray.length % 2) == 0) {
                     vertex = AtlasGraphUtilsV2.findByTypeAndUniquePropertyName(GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME,
-                            GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, dataArray[1] + invalidNameChars[0] + dataArray[0]);
+                            GlossaryUtils.ATLAS_GLOSSARY_CATEGORY_TYPENAME + invalidNameChars[1] + QUALIFIED_NAME_ATTR, realm + "/" + dataArray[1] + invalidNameChars[0] + realm + "/" + dataArray[0]);
                 }
                 else {
                     failedTermMsgs.add("\n" + "Either incorrect data specified for Term or Category does not exist : " +termName);
@@ -878,6 +891,8 @@ public class GlossaryTermUtils extends GlossaryUtils {
             String                 csvRecordArray[] = csvRecord.split(FileUtils.ESCAPE_CHARACTER + FileUtils.PIPE_CHARACTER);
             AtlasClassification termClassification;
 
+            String realm = AtlasAuthorizationUtils.getCurrentUserRealm();
+
             for (String data : csvRecordArray) {
 
                 // TODO check for the existence of the classification here
@@ -888,7 +903,7 @@ public class GlossaryTermUtils extends GlossaryUtils {
 
                 if (data != "") {
                     termClassification       = new AtlasClassification();
-                    termClassification.setTypeName(data);
+                    termClassification.setTypeName(realm + "_" + data);
                     ret.add(termClassification);
                 } else {
                     failedTermMsgs.add("\n" + "The provided Reference Glossary and Category does not exist in the system " +
