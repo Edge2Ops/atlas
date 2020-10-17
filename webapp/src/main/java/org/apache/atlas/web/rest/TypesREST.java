@@ -480,13 +480,9 @@ public class TypesREST {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "TypesREST.fixVertexProperties(" + fromName + ","+toName+")");
             }
 
-
             AtlasJanusGraph atlasJanusGraph = new AtlasJanusGraph();
 
-            int batchSize = 500;
-            int start = 0;
-
-            Iterator it = atlasJanusGraph.V().has(fromName).hasNot(toName).skip(start).limit(batchSize).toList().iterator();
+            Iterator it = atlasJanusGraph.V().has(fromName).hasNot(toName).toList().iterator();
             while (it.hasNext()) {
                 CacheVertex vertex = (CacheVertex) it.next();
 
@@ -495,11 +491,7 @@ public class TypesREST {
                 vertex.property(toName,previousPropertyValue);
 
                 vertex.graph().commit();
-                start++;
 
-                if (start%batchSize==0) {
-                    it = atlasJanusGraph.V().has(fromName).hasNot(toName).skip(start).limit(batchSize).toList().iterator();
-                }
                 PERF_LOG.info("Migrated value for vertex: ");
             }
 
