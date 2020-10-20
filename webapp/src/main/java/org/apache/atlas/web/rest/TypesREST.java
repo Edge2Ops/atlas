@@ -25,6 +25,7 @@ import org.apache.atlas.repository.graph.AtlasGraphProvider;
 import org.apache.atlas.repository.graph.GraphBackedSearchIndexer;
 import org.apache.atlas.repository.graphdb.AtlasGraph;
 import org.apache.atlas.repository.graphdb.AtlasVertex;
+import org.apache.atlas.repository.graphdb.janus.AtlasElasticsearchDatabase;
 import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraph;
 import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphDatabase;
 import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphManagement;
@@ -37,7 +38,12 @@ import org.apache.atlas.utils.AtlasPerfTracer;
 import org.apache.atlas.web.util.Servlets;
 import org.apache.http.annotation.Experimental;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.graph.Vertex;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphVertex;
 import org.janusgraph.graphdb.database.management.ManagementSystem;
@@ -51,10 +57,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * REST interface for CRUD operations on type definitions
@@ -472,12 +475,28 @@ public class TypesREST {
      */
     @POST
     @Path("/typedef/fixvertexproperty")
-    public void fixVertexProperties(@QueryParam("from") String fromName, @QueryParam("to") String toName) throws AtlasBaseException {
+    public void fixVertexProperties(@QueryParam("from") String fromName, @QueryParam("to") String toName, @QueryParam("jobId") String jobId) throws AtlasBaseException {
         AtlasPerfTracer perf = null;
 
         try {
             if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
                 perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "TypesREST.fixVertexProperties(" + fromName + ","+toName+")");
+            }
+
+            //Add status in ES first
+            RestHighLevelClient esClient = AtlasElasticsearchDatabase.getClient();
+
+
+            UpdateRequest indexRequest = new UpdateRequest("migration_tracking_index",jobId);
+
+            HashMap<String,String> m = new HashMap<>();
+            indexRequest = indexRequest.doc("typeMigrationStatus", "INIT");
+            indexRequest = indexRequest.docAsUpsert(true);
+
+            try {
+                UpdateResponse resp = esClient.update(indexRequest,RequestOptions.DEFAULT);
+            } catch (Exception e3) {
+                PERF_LOG.info("Error adding status in ES index");
             }
 
             AtlasJanusGraph atlasJanusGraph = new AtlasJanusGraph();
@@ -497,6 +516,36 @@ public class TypesREST {
 
             PERF_LOG.info("NO MORE VALUES TO MIGRATE!!");
 
+            indexRequest = indexRequest.doc("typeMigrationStatus", "SUCCESS");
+            indexRequest = indexRequest.docAsUpsert(true);
+
+            try {
+                UpdateResponse resp2 = esClient.update(indexRequest,RequestOptions.DEFAULT);
+            } catch (Exception e4) {
+                PERF_LOG.info("Error updating status in ES");
+            }
+
+
+        } catch (Exception e) {
+            PERF_LOG.error("Error occurred: ",e.toString());
+
+            //Update failed status in ES
+            //Add status in ES first
+            RestHighLevelClient esClient = AtlasElasticsearchDatabase.getClient();
+
+            UpdateRequest indexRequest = new UpdateRequest("migration_tracking_index",jobId);
+
+            HashMap<String,String> m = new HashMap<>();
+
+            indexRequest = indexRequest.doc("typeMigrationStatus", "FAILED");
+            indexRequest = indexRequest.doc("typeMigrationStatusMessage", e.toString());
+            indexRequest = indexRequest.docAsUpsert(true);
+
+            try {
+                UpdateResponse resp = esClient.update(indexRequest,RequestOptions.DEFAULT);
+            } catch (Exception e2) {
+                PERF_LOG.error("Error occurred while updating status in ES ",e2.toString());
+            }
         } finally {
             AtlasPerfTracer.log(perf);
         }
