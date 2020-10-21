@@ -24,6 +24,7 @@ import org.apache.atlas.type.AtlasStructType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -261,23 +262,72 @@ public class ESIndexQueryBuilder {
     }
 
     void constructSearchSource(SearchSourceBuilder sourceBuilder, String queryString,
-                               String fullTextQuery, String sortBy, org.apache.atlas.SortOrder sortOrder) {
+                               String fullTextQuery, String sortBy, org.apache.atlas.SortOrder sortOrder, float minScore, SearchParameters.AttributeRelevance[] attributeRelevances) {
         if (StringUtils.isNotEmpty(fullTextQuery)) {
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-            boolQueryBuilder.must().add(QueryBuilders.queryStringQuery(queryString));
+            boolQueryBuilder.filter().add(QueryBuilders.queryStringQuery(queryString));
 
-            QueryStringQueryBuilder fullTextQueryBuilder = QueryBuilders.queryStringQuery(fullTextQuery);
-            fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".displayName", 500F);
-            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_name", 500F);
-            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".name", 500F);
-            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".description", 50F);
-            fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".integrationType", 50F);
-//            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".__s_owner", 50F);
-//            fullTextQueryBuilder.fields().put(ASSET_ENTITY_TYPE + ".owner", 50F);
-//            fullTextQueryBuilder.fields().put(REF_ASSET_TYPE + ".qualifiedName", 10F);
-//            fullTextQueryBuilder.fields().put(ATLAN_ASSET_TYPE + ".status", 10F);
-            boolQueryBuilder.must().add(fullTextQueryBuilder);
+            //Prepare queries
+            String rawQuery = StringUtils.trim(fullTextQuery);
+            String cleanedQuery = StringUtils.replace(rawQuery,"_"," ");
+            cleanedQuery = StringUtils.replace(cleanedQuery,"-"," ");
 
+            //Wildcard query
+            String wildCardQuery = "";
+            String[] wildcardTokens = StringUtils.split(cleanedQuery," ");
+            Iterator<String> it = Arrays.stream(wildcardTokens).iterator();
+            while (it.hasNext()) {
+                wildCardQuery = wildCardQuery + "(*"+it.next()+"*) ";
+            }
+            wildCardQuery = StringUtils.trim(wildCardQuery);
+
+            //Exact query
+            QueryStringQueryBuilder exactQuery = QueryBuilders.queryStringQuery(rawQuery);
+            Map<String,Float> nameKeyFieldMap = new HashMap<String, Float>();
+            nameKeyFieldMap.put(ATLAN_ASSET_TYPE + ".displayName.keyword",1F);
+            nameKeyFieldMap.put(ASSET_ENTITY_TYPE + ".name.keyword",1F);
+            nameKeyFieldMap.put(ASSET_ENTITY_TYPE + ".__s_name.keyword",1F);
+            exactQuery.fields().putAll(nameKeyFieldMap);
+            exactQuery.boost(300F);
+            boolQueryBuilder.should().add(exactQuery);
+
+            //Phrase query for in order relevance
+            String[] nameFields = new String[]{ATLAN_ASSET_TYPE + ".displayName",ASSET_ENTITY_TYPE + ".name",ASSET_ENTITY_TYPE + ".__s_name"};
+            Iterator<String> nameIt = Arrays.stream(nameFields).iterator();
+            while(nameIt.hasNext()) {
+                MatchPhraseQueryBuilder phraseOrderQuery = QueryBuilders.matchPhraseQuery(nameIt.next(),cleanedQuery);
+                phraseOrderQuery.slop(3);
+                phraseOrderQuery.boost(200F);
+                boolQueryBuilder.should().add(phraseOrderQuery);
+            }
+
+            //Token query
+            QueryStringQueryBuilder tokenQuery = QueryBuilders.queryStringQuery(cleanedQuery);
+            Map<String,Float> tokenFieldMap = new HashMap<String, Float>();
+            nameIt = Arrays.stream(nameFields).iterator();
+            while (nameIt.hasNext()) {
+                String fieldName = nameIt.next();
+                tokenFieldMap.put(fieldName,100F);
+                tokenFieldMap.put(fieldName + ".stemmed",50F);
+            }
+            tokenQuery.fields().putAll(tokenFieldMap);
+            tokenQuery.boost(160F);
+            boolQueryBuilder.should().add(tokenQuery);
+
+             //Wildcard query
+            QueryStringQueryBuilder wildcardStringQuery = QueryBuilders.queryStringQuery(wildCardQuery);
+            wildcardStringQuery.fields().putAll(nameKeyFieldMap);
+            wildcardStringQuery.boost(140F);
+            boolQueryBuilder.should().add(wildcardStringQuery);
+
+            //Other field query
+            QueryStringQueryBuilder otherFieldsQuery = QueryBuilders.queryStringQuery(cleanedQuery);
+            otherFieldsQuery.fields().put(ASSET_ENTITY_TYPE + ".description", 1F);
+            otherFieldsQuery.fields().put(ATLAN_ASSET_TYPE + ".integrationType", 1F);
+            otherFieldsQuery.boost(100F);
+            boolQueryBuilder.should().add(otherFieldsQuery);
+
+            sourceBuilder.minScore(minScore);
             sourceBuilder.query(boolQueryBuilder);
         } else {
             sourceBuilder.query(QueryBuilders.queryStringQuery(queryString));

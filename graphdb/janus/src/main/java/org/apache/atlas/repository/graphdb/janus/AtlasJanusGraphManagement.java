@@ -18,6 +18,9 @@
 package org.apache.atlas.repository.graphdb.janus;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import it.unimi.dsi.fastutil.Hash;
 import org.apache.atlas.repository.graphdb.AtlasEdgeDirection;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.janusgraph.core.Cardinality;
@@ -35,12 +38,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.janusgraph.graphdb.types.ParameterType;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Janus implementation of AtlasGraphManagement.
@@ -194,26 +197,37 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
     }
 
     @Override
-    public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer) {
+    public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer, boolean setupEnhancedSearch) {
         PropertyKey janusKey = AtlasJanusObjectFactory.createPropertyKey(propertyKey);
         JanusGraphIndex janusGraphIndex = management.getGraphIndex(indexName);
 
-        if (isStringField) {
-            if (normalizer == "" || normalizer == null) {
-                management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter());
-            } else {
-                management.addIndexKey(janusGraphIndex, janusKey, Mapping.STRING.asParameter(), Parameter.of(ParameterType.customParameterName("normalizer"), normalizer));
-            }
+        ArrayList<Parameter> params = new ArrayList<>();
 
-            LOG.debug("created a string type for {} with janueKey {}.", propertyKey.getName(), janusKey);
-        } else {
-            if (normalizer == "" || normalizer == null) {
-                management.addIndexKey(janusGraphIndex, janusKey);
-            } else {
-                management.addIndexKey(janusGraphIndex, janusKey, Parameter.of(ParameterType.customParameterName("normalizer"), normalizer));
-            }
-            LOG.debug("created a default type for {} with janueKey {}.", propertyKey.getName(), janusKey);
+        if (isStringField) {
+            params.add(Mapping.STRING.asParameter());
         }
+
+        if (normalizer !=null && normalizer !="") {
+            params.add(Parameter.of(ParameterType.customParameterName("normalizer"),normalizer));
+        }
+
+        if (setupEnhancedSearch && !isStringField) {
+            String jsonString = "{\n" +
+                    "  \"keyword\": {\n" +
+                    "    \"type\": \"keyword\",\n" +
+                    "    \"normalizer\": \"lowerasciinormalizer\"\n" +
+                    "  },\n" +
+                    "  \"stemmed\": {\n" +
+                    "    \"type\": \"text\",\n" +
+                    "    \"analyzer\": \"snowball_analyzer\"\n" +
+                    "  }\n" +
+                    "}";
+            HashMap <String,HashMap<String,String>> fieldsParam = new Gson().fromJson(jsonString, new TypeToken<HashMap<String, HashMap<String,String>>>(){}.getType());
+            params.add(Parameter.of(ParameterType.customParameterName("fields"), fieldsParam));
+            params.add(Parameter.of(ParameterType.customParameterName("analyzer"),"ignore_sepcial_characters"));
+        }
+
+        management.addIndexKey(janusGraphIndex,janusKey,params.toArray(new Parameter[0]));
 
         String encodedName = "";
         if (isStringField) {
@@ -230,7 +244,7 @@ public class AtlasJanusGraphManagement implements AtlasGraphManagement {
 
     @Override
     public String addMixedIndex(String indexName, AtlasPropertyKey propertyKey, boolean isStringField) {
-        return addMixedIndex(indexName, propertyKey, isStringField, "");
+        return addMixedIndex(indexName, propertyKey, isStringField, "",false);
     }
 
     @Override
