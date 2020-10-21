@@ -475,7 +475,7 @@ public class TypesREST {
      */
     @POST
     @Path("/typedef/fixvertexproperty")
-    public void fixVertexProperties(@QueryParam("from") String fromName, @QueryParam("to") String toName, @QueryParam("jobId") String jobId) throws AtlasBaseException {
+    public void fixVertexProperties(@QueryParam("from") String fromName, @QueryParam("to") String toName, @QueryParam("jobId") String jobId,@QueryParam("commitBatch") @DefaultValue("100") int commitBatch) throws AtlasBaseException {
         AtlasPerfTracer perf = null;
 
         try {
@@ -501,18 +501,33 @@ public class TypesREST {
 
             AtlasJanusGraph atlasJanusGraph = new AtlasJanusGraph();
 
-            Iterator it = atlasJanusGraph.V().has(fromName).hasNot(toName).toList().iterator();
-            while (it.hasNext()) {
-                CacheVertex vertex = (CacheVertex) it.next();
+            PERF_LOG.info("Starting traversal query");
+            GraphTraversal t = atlasJanusGraph.V().has(fromName).hasNot(toName);
+            PERF_LOG.info("Traversal query finish");
+
+            int count = 0;
+
+            CacheVertex vertex = null;
+            while (t.hasNext()) {
+                count++;
+                vertex = (CacheVertex) t.next();
 
                 String previousPropertyValue = vertex.value(fromName).toString();
 
                 vertex.property(toName,previousPropertyValue);
 
-                vertex.graph().commit();
+                if (count%commitBatch ==0) {
+                    vertex.graph().commit();
+                }
 
-                PERF_LOG.info("Migrated value for vertex: ");
+                PERF_LOG.info("Migrated value for vertex: " + count);
             }
+            
+            if (vertex!=null) {
+                vertex.graph().commit();    
+            } 
+
+            
 
             PERF_LOG.info("NO MORE VALUES TO MIGRATE!!");
 
