@@ -76,3 +76,5 @@ Build Process
    distro/target/apache-atlas-<version>-storm-hook.tar.gz
 
 4. For more details on installing and running Apache Atlas, please refer to https://atlas.apache.org/#/Installation
+
+
