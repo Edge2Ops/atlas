@@ -169,7 +169,7 @@ public interface AtlasGraphManagement {
      * @param normalizer
      * @return the index field name used for the given property
      */
-    String addMixedIndex(String vertexIndex, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer);
+    String addMixedIndex(String vertexIndex, AtlasPropertyKey propertyKey, boolean isStringField, String normalizer, boolean setupEnhancedSearch);
 
     /**
      * Gets the index field name for the vertex property.

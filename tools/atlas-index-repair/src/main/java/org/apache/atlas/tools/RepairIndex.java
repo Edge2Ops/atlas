@@ -416,6 +416,52 @@ public class RepairIndex {
                                 }.getType()
                         );
                         oldMap = deepMerge(oldMap, newMap);
+                    } else if (attributeDef.getSetupEnhancedSearch() && (attributeDef.getIndexType() == null || !attributeDef.getIndexType().equals(AtlasStructDef.AtlasAttributeDef.IndexType.STRING))) {
+                        String qualifiedName = AtlasStructType.AtlasAttribute.getQualifiedAttributeName(entityDef, attributeDef.getName());
+                        String propertyName = AtlasStructType.AtlasAttribute.generateVertexPropertyName(entityDef, attributeDef, qualifiedName);
+                        //Check if properties exists
+                        XContentBuilder newBuilder = XContentFactory.jsonBuilder();
+                        newBuilder.startObject();
+                        newBuilder.startObject("properties");
+                        String[] splits = propertyName.split("\\.");
+                        for (int i = 0; i < splits.length; i++) {
+                            newBuilder.startObject(splits[i]);
+                            if (i != splits.length - 1) {
+                                newBuilder.startObject("properties");
+                            }
+                        }
+                        newBuilder.field("type", "text");
+                        newBuilder.field("analyzer","ignore_sepcial_characters");
+
+
+                        String jsonString = "{\n" +
+                                "  \"keyword\": {\n" +
+                                "    \"type\": \"keyword\",\n" +
+                                "    \"normalizer\": \"lowerasciinormalizer\"\n" +
+                                "  },\n" +
+                                "  \"stemmed\": {\n" +
+                                "    \"type\": \"text\",\n" +
+                                "    \"analyzer\": \"snowball_analyzer\"\n" +
+                                "  }\n" +
+                                "}";
+                        HashMap <String,HashMap<String,String>> fieldsParam = new Gson().fromJson(jsonString, new TypeToken<HashMap<String, HashMap<String,String>>>(){}.getType());
+                        newBuilder.field("fields",fieldsParam);
+
+                        for (int i = 0; i < splits.length; i++) {
+                            newBuilder.endObject();
+                            if (i != splits.length - 1) {
+                                newBuilder.endObject();
+                            }
+                        }
+                        newBuilder.endObject();
+                        newBuilder.endObject();
+
+                        //Convert to  map
+                        Map<String, Object> newMap = new Gson().fromJson(
+                                Strings.toString(newBuilder), new TypeToken<HashMap<String, Object>>() {
+                                }.getType()
+                        );
+                        oldMap = deepMerge(oldMap, newMap);
                     }
                 }
             }

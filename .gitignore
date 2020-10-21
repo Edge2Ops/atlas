@@ -77,3 +77,4 @@ dashboardv3/node_modules
 docs/package-lock.json
 
 deploy/**
+/tools/atlas-index-repair/src/main/resources/atlas-application.properties

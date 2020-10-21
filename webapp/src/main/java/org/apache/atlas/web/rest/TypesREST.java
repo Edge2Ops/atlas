@@ -18,14 +18,36 @@
 package org.apache.atlas.web.rest;
 
 import org.apache.atlas.exception.AtlasBaseException;
+import org.apache.atlas.listener.TypeDefChangeListener;
 import org.apache.atlas.model.SearchFilter;
 import org.apache.atlas.model.typedef.*;
+import org.apache.atlas.repository.graph.AtlasGraphProvider;
+import org.apache.atlas.repository.graph.GraphBackedSearchIndexer;
+import org.apache.atlas.repository.graphdb.AtlasGraph;
+import org.apache.atlas.repository.graphdb.AtlasVertex;
+import org.apache.atlas.repository.graphdb.janus.AtlasElasticsearchDatabase;
+import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraph;
+import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphDatabase;
+import org.apache.atlas.repository.graphdb.janus.AtlasJanusGraphManagement;
+import org.apache.atlas.repository.store.graph.v2.AtlasTypeDefGraphStoreV2;
 import org.apache.atlas.repository.util.FilterUtil;
 import org.apache.atlas.store.AtlasTypeDefStore;
+import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.atlas.type.AtlasTypeUtil;
 import org.apache.atlas.utils.AtlasPerfTracer;
 import org.apache.atlas.web.util.Servlets;
 import org.apache.http.annotation.Experimental;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.graph.Vertex;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.janusgraph.core.JanusGraph;
+import org.janusgraph.core.JanusGraphVertex;
+import org.janusgraph.graphdb.database.management.ManagementSystem;
+import org.janusgraph.graphdb.vertices.CacheVertex;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -35,8 +57,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * REST interface for CRUD operations on type definitions
@@ -444,6 +465,93 @@ public class TypesREST {
             AtlasPerfTracer.log(perf);
         }
     }
+
+    /**
+     * Fix typedef's property name and value
+     *
+     * @throws AtlasBaseException
+     * @HTTP 204 On successful deletion of the requested type definitions
+     * @HTTP 400 On validation failure for any type definitions
+     */
+    @POST
+    @Path("/typedef/fixvertexproperty")
+    public void fixVertexProperties(@QueryParam("from") String fromName, @QueryParam("to") String toName, @QueryParam("jobId") String jobId) throws AtlasBaseException {
+        AtlasPerfTracer perf = null;
+
+        try {
+            if (AtlasPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = AtlasPerfTracer.getPerfTracer(PERF_LOG, "TypesREST.fixVertexProperties(" + fromName + ","+toName+")");
+            }
+
+            //Add status in ES first
+            RestHighLevelClient esClient = AtlasElasticsearchDatabase.getClient();
+
+
+            UpdateRequest indexRequest = new UpdateRequest("migration_tracking_index",jobId);
+
+            HashMap<String,String> m = new HashMap<>();
+            indexRequest = indexRequest.doc("typeMigrationStatus", "INIT");
+            indexRequest = indexRequest.docAsUpsert(true);
+
+            try {
+                UpdateResponse resp = esClient.update(indexRequest,RequestOptions.DEFAULT);
+            } catch (Exception e3) {
+                PERF_LOG.info("Error adding status in ES index");
+            }
+
+            AtlasJanusGraph atlasJanusGraph = new AtlasJanusGraph();
+
+            Iterator it = atlasJanusGraph.V().has(fromName).hasNot(toName).toList().iterator();
+            while (it.hasNext()) {
+                CacheVertex vertex = (CacheVertex) it.next();
+
+                String previousPropertyValue = vertex.value(fromName).toString();
+
+                vertex.property(toName,previousPropertyValue);
+
+                vertex.graph().commit();
+
+                PERF_LOG.info("Migrated value for vertex: ");
+            }
+
+            PERF_LOG.info("NO MORE VALUES TO MIGRATE!!");
+
+            indexRequest = indexRequest.doc("typeMigrationStatus", "SUCCESS");
+            indexRequest = indexRequest.docAsUpsert(true);
+
+            try {
+                UpdateResponse resp2 = esClient.update(indexRequest,RequestOptions.DEFAULT);
+            } catch (Exception e4) {
+                PERF_LOG.info("Error updating status in ES");
+            }
+
+
+        } catch (Exception e) {
+            PERF_LOG.error("Error occurred: ",e.toString());
+
+            //Update failed status in ES
+            //Add status in ES first
+            RestHighLevelClient esClient = AtlasElasticsearchDatabase.getClient();
+
+            UpdateRequest indexRequest = new UpdateRequest("migration_tracking_index",jobId);
+
+            HashMap<String,String> m = new HashMap<>();
+
+            indexRequest = indexRequest.doc("typeMigrationStatus", "FAILED");
+            indexRequest = indexRequest.doc("typeMigrationStatusMessage", e.toString());
+            indexRequest = indexRequest.docAsUpsert(true);
+
+            try {
+                UpdateResponse resp = esClient.update(indexRequest,RequestOptions.DEFAULT);
+            } catch (Exception e2) {
+                PERF_LOG.error("Error occurred while updating status in ES ",e2.toString());
+            }
+        } finally {
+            AtlasPerfTracer.log(perf);
+        }
+    }
+
+
 
     /**
      * Populate a SearchFilter on the basis of the Query Parameters
