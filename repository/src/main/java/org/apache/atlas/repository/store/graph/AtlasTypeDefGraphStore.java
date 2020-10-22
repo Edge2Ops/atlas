@@ -362,19 +362,21 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
 
         List<AtlasClassificationDef> classifications = typesDef.getClassificationDefs();
 
-        for (AtlasClassificationDef cfcation : classifications) {
-            String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
-            if (userRealm != "") {
-                cfcation.setTenant(userRealm);
-            }
+        if (!classifications.isEmpty()) {
+            for (AtlasClassificationDef cfcation : classifications) {
+                String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
+                if (userRealm != "") {
+                    cfcation.setTenant(userRealm);
+                }
 
-            if (cfcation.getDisplayName() == null) {
-                cfcation.setDisplayName(cfcation.getName());
-                cfcation.setName(cfcation.getTenant() + "_" + cfcation.getName());
-            }
+                if (cfcation.getDisplayName() == null) {
+                    cfcation.setDisplayName(cfcation.getName());
+                    cfcation.setName(cfcation.getTenant() + "_" + cfcation.getName());
+                }
 
-            if (!cfcation.getName().startsWith(cfcation.getTenant() + "_")) {
-                cfcation.setName(cfcation.getTenant() + "_" + cfcation.getName());
+                if (!cfcation.getName().startsWith(cfcation.getTenant() + "_")) {
+                    cfcation.setName(cfcation.getTenant() + "_" + cfcation.getName());
+                }
             }
         }
 
