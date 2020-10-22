@@ -362,7 +362,7 @@ public abstract class AtlasTypeDefGraphStore implements AtlasTypeDefStore {
 
         List<AtlasClassificationDef> classifications = typesDef.getClassificationDefs();
 
-        if (!classifications.isEmpty()) {
+        if (classifications != null && !classifications.isEmpty()) {
             for (AtlasClassificationDef cfcation : classifications) {
                 String userRealm = AtlasAuthorizationUtils.getCurrentUserRealm();
                 if (userRealm != "") {
