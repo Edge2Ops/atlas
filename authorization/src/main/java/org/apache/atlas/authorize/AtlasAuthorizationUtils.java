@@ -276,12 +276,7 @@ public class AtlasAuthorizationUtils {
         } catch (Exception e) {
             System.out.println(e);
         }
-
-        // If realm exists, the token is not of a service account, prepend realm.
-        if (realm != "" && auth != null && !auth.getName().startsWith("service-account-")) {
-            return realm;
-        }
-        return "";
+        return realm;
     }
 
     public static Set<String> getCurrentUserGroups() {
