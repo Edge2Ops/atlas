@@ -94,7 +94,7 @@ public class SearchContext {
 
         //Set use legacy search
         String useLegacySearchFlag = System.getProperty("atlas.flags.legacy-search-enabled");
-        if (useLegacySearchFlag.equalsIgnoreCase("true")) {
+        if (useLegacySearchFlag!= null && useLegacySearchFlag.equalsIgnoreCase("true")) {
             this.useLegacySearch = true;
         }
 
