@@ -384,7 +384,7 @@ public class EntitySearchProcessor extends SearchProcessor {
             }
 
             ESIndexQueryString = indexQueryString;
-            esIndexQueryBuilder.constructSearchSource(sourceBuilder, indexQueryString, context.getSearchParameters().getQuery(), sortBy, sortOrder, context.getSearchParameters().getMinScore(), context.getSearchParameters().getAttributeRelevances());
+            esIndexQueryBuilder.constructSearchSource(sourceBuilder, indexQueryString, context.getSearchParameters().getQuery(), sortBy, sortOrder, context.getSearchParameters().getMinScore(),context.getSearchParameters().getAttributeRelevances());
             this.indexQuery = context.getGraph().esIndexQuery(Constants.VERTEX_INDEX, sourceBuilder);
 
             List<AtlasVertex> tempList = getResultForQuery();
