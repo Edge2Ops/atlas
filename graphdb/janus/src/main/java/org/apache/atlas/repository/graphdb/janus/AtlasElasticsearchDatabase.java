@@ -61,7 +61,9 @@ public class AtlasElasticsearchDatabase {
                     try {
                         List<HttpHost> httpHosts = getHttpHosts();
 
-                    RestClientBuilder restClientBuilder = RestClient.builder(httpHosts.toArray(new HttpHost[0]));
+                    RestClientBuilder restClientBuilder = RestClient.builder(httpHosts.toArray(new HttpHost[0]))
+                            .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(900000)
+                            .setSocketTimeout(900000));
                     searchClient =
                             new RestHighLevelClient(restClientBuilder);
                     } catch (AtlasException e) {
