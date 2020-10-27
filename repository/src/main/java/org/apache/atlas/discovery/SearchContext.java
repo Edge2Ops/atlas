@@ -72,6 +72,7 @@ public class SearchContext {
     private final String classificationTypeAndSubTypesQryStr;
     private boolean terminateSearch = false;
     private SearchProcessor searchProcessor;
+    private boolean useLegacySearch = false;
 
     public final static AtlasClassificationType MATCH_ALL_WILDCARD_CLASSIFICATION = new AtlasClassificationType(new AtlasClassificationDef(WILDCARD_CLASSIFICATIONS));
     public final static AtlasClassificationType MATCH_ALL_CLASSIFIED = new AtlasClassificationType(new AtlasClassificationDef(ALL_CLASSIFICATIONS));
@@ -90,6 +91,12 @@ public class SearchContext {
         this.entityTypes = getEntityTypes(searchParameters.getTypeName());
         this.classificationNames = getClassificationNames(searchParameters.getClassification());
         this.classificationTypes = getClassificationTypes(this.classificationNames);
+
+        //Set use legacy search
+        String useLegacySearchFlag = System.getProperty("atlas.flags.legacy-search-enabled");
+        if (useLegacySearchFlag!= null && useLegacySearchFlag.equalsIgnoreCase("true")) {
+            this.useLegacySearch = true;
+        }
 
         AtlasVertex glossaryTermVertex = getGlossaryTermVertex(searchParameters.getTermName());
 
@@ -535,5 +542,9 @@ public class SearchContext {
 
     private AtlasEntityType getTermEntityType() {
         return typeRegistry.getEntityTypeByName(TermSearchProcessor.ATLAS_GLOSSARY_TERM_ENTITY_TYPE);
+    }
+
+    public boolean useLegacySearch() {
+        return this.useLegacySearch;
     }
 }

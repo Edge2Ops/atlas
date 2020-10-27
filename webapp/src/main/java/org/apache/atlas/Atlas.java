@@ -154,6 +154,12 @@ public final class Atlas {
         server = EmbeddedServer.newServer(appHost, appPort, appPath, enableTLS);
         installLogBridge();
 
+        //Set feature flag environment variable
+        String useLegacySearchFlag = System.getenv("ATLAS_USE_LEGACY_SEARCH");
+        if (useLegacySearchFlag != null) {
+            System.setProperty("atlas.flags.legacy-search-enabled",useLegacySearchFlag);
+        }
+
         server.start();
     }
 
